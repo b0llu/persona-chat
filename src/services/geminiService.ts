@@ -148,9 +148,9 @@ export const generatePersonas = async (searchTerm: string): Promise<AIGeneratedP
   }
 
   try {
-    const prompt = `Generate up to 10 personas related to "${searchTerm}". For each persona, provide:
+    const prompt = `Generate up to 5 personas related to "${searchTerm}". For each persona, provide:
 - name: The full name of the persona
-- description: A brief, engaging description (1-2 sentences)
+- description: A brief, engaging description (1 sentences)
 - category: One of these categories: "celebrity", "anime", "cartoon", "historical", "fictional", or "custom"
 
 Format your response as a JSON array of objects with these exact properties. Make sure the personas are diverse and interesting. Focus on well-known characters or people that would be engaging to chat with.
