@@ -13,6 +13,12 @@ interface GenerateOptions {
   }>;
 }
 
+interface AIGeneratedPersona {
+  name: string;
+  description: string;
+  category: string;
+}
+
 // Initialize the AI client
 let ai: GoogleGenAI | null = null;
 
@@ -136,11 +142,86 @@ export const generateStreamResponse = async (
   }
 };
 
+export const generatePersonas = async (searchTerm: string): Promise<AIGeneratedPersona[]> => {
+  if (!isGeminiAvailable()) {
+    throw new Error('Gemini service is not available. Please check your API key configuration.');
+  }
+
+  try {
+    const prompt = `Generate up to 10 personas related to "${searchTerm}". For each persona, provide:
+- name: The full name of the persona
+- description: A brief, engaging description (1-2 sentences)
+- category: One of these categories: "celebrity", "anime", "cartoon", "historical", "fictional", or "custom"
+
+Format your response as a JSON array of objects with these exact properties. Make sure the personas are diverse and interesting. Focus on well-known characters or people that would be engaging to chat with.
+
+Example format:
+[
+  {
+    "name": "Example Name",
+    "description": "Brief description of the persona",
+    "category": "celebrity"
+  }
+]
+
+Only return the JSON array, no additional text.`;
+
+    const response = await ai!.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        temperature: 0.7
+      }
+    });
+
+    const text = response.text;
+    
+    if (!text || text.trim() === '') {
+      throw new Error('Empty response from Gemini API');
+    }
+
+    // Clean up the response to ensure it's valid JSON
+    let cleanedText = text.trim();
+    
+    // Remove any markdown code block formatting
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const personas: AIGeneratedPersona[] = JSON.parse(cleanedText);
+    
+    // Validate the response structure
+    if (!Array.isArray(personas)) {
+      throw new Error('Invalid response format: expected array');
+    }
+
+    // Filter and validate personas
+    const validPersonas = personas
+      .filter(persona => 
+        persona && 
+        typeof persona.name === 'string' && 
+        typeof persona.description === 'string' && 
+        typeof persona.category === 'string' &&
+        persona.name.trim() !== '' &&
+        persona.description.trim() !== ''
+      )
+      .slice(0, 10); // Ensure max 10 personas
+
+    return validPersonas;
+  } catch (error) {
+    console.error('Error generating personas from Gemini:', error);
+    throw new Error('Failed to generate personas. Please try a different search term.');
+  }
+};
+
 // For backward compatibility, create a service object
 export const geminiService = {
   isAvailable: isGeminiAvailable,
   generateResponse,
-  generateStreamResponse
+  generateStreamResponse,
+  generatePersonas
 };
 
 export default geminiService; 

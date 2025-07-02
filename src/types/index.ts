@@ -10,7 +10,8 @@ export interface Persona {
   name: string;
   description: string;
   avatar: string;
-  category: 'celebrity' | 'anime' | 'cartoon' | 'historical' | 'fictional';
+  category: 'celebrity' | 'anime' | 'cartoon' | 'historical' | 'fictional' | 'custom';
+  isGenerated?: boolean;
 }
 
 export interface ChatSession {
@@ -26,4 +27,10 @@ export interface User {
   photoURL?: string | null;
   displayName?: string | null;
   email?: string | null;
+}
+
+export interface AIGeneratedPersona {
+  name: string;
+  description: string;
+  category: string;
 } 
