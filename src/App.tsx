@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AuthGuard from './components/AuthGuard';
-import Login from './components/Login';
+import Landing from './components/Landing';
 import { ThemeProvider } from './context/ThemeContext';
 import { useAuth } from './hooks/useAuth';
 import ChatInterface from './components/ChatInterface';
@@ -19,11 +19,11 @@ function AppContent() {
   return (
     <Routes>
       <Route 
-        path="/login" 
-        element={user ? <Navigate to="/" replace /> : <Login />} 
+        path="/" 
+        element={user ? <Navigate to="/dashboard" replace /> : <Landing />} 
       />
       <Route 
-        path="/" 
+        path="/dashboard" 
         element={
           <AuthGuard>
             <ChatInterface />
@@ -40,7 +40,7 @@ function AppContent() {
       />
       <Route 
         path="*" 
-        element={<Navigate to={user ? "/" : "/login"} replace />} 
+        element={<Navigate to={user ? "/dashboard" : "/"} replace />} 
       />
     </Routes>
   );
