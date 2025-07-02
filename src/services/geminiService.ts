@@ -148,7 +148,7 @@ export const generatePersonas = async (searchTerm: string): Promise<AIGeneratedP
   }
 
   try {
-    const prompt = `Generate up to 5 personas related to "${searchTerm}". For each persona, provide:
+    const prompt = `Generate up to 5 personas related to or exactly named "${searchTerm}". The personas could be real world people, fictional characters, or historical figures. For each persona, provide:
 - name: The full name of the persona
 - description: A brief, engaging description (1 sentences)
 - category: One of these categories: "celebrity", "anime", "cartoon", "historical", "fictional", or "custom"
@@ -169,9 +169,6 @@ Only return the JSON array, no additional text.`;
     const response = await ai!.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
-      config: {
-        temperature: 0.7
-      }
     });
 
     const text = response.text;
@@ -196,7 +193,7 @@ Only return the JSON array, no additional text.`;
     if (!Array.isArray(personas)) {
       throw new Error('Invalid response format: expected array');
     }
-
+    console.log(personas);
     // Filter and validate personas
     const validPersonas = personas
       .filter(persona => 
