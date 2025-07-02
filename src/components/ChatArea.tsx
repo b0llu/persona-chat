@@ -115,7 +115,7 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
               ref={textareaRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder={`Message ${persona.name}...`}
               className="w-full resize-none bg-muted border border-input rounded-lg px-3 lg:px-4 py-2 lg:py-3 text-sm lg:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent min-h-[44px] max-h-[120px] leading-5"
               rows={1}
