@@ -124,12 +124,12 @@ const PERSONAS: Persona[] = [
 ];
 
 const CATEGORIES = [
-  { id: 'all', name: 'All Personas', emoji: '🌟' },
-  { id: 'celebrity', name: 'Celebrities', emoji: '⭐' },
-  { id: 'anime', name: 'Anime', emoji: '🎌' },
-  { id: 'cartoon', name: 'Cartoons', emoji: '🎭' },
-  { id: 'historical', name: 'Historical', emoji: '📚' },
-  { id: 'fictional', name: 'Fictional', emoji: '🦸' },
+  { id: 'all', name: 'All Personas' },
+  { id: 'celebrity', name: 'Celebrities' },
+  { id: 'anime', name: 'Anime' },
+  { id: 'cartoon', name: 'Cartoons' },
+  { id: 'historical', name: 'Historical' },
+  { id: 'fictional', name: 'Fictional' },
 ];
 
 const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
@@ -158,32 +158,31 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+        <div className="flex gap-2 overflow-x-auto">
           {CATEGORIES.map((category) => (
             <Button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              variant="outline"
-              className={`flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-9 ${
+              variant={selectedCategory === category.id ? "default" : "outline"}
+              className={`flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-9 transition-all duration-200 ${
                 selectedCategory === category.id
-                  ? 'bg-accent text-accent-foreground'
-                  : ''
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm hover:bg-primary/90'
+                  : 'hover:bg-accent hover:text-accent-foreground'
               }`}
             >
-              <span className="text-sm">{category.emoji}</span>
-              <span className="hidden sm:inline">{category.name}</span>
+              <span className="">{category.name}</span>
             </Button>
           ))}
         </div>
 
-        <div className="w-full">
+        <div className="w-full lg:w-auto lg:min-w-64">
           <input
             type="text"
             placeholder="Search personas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-3 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-base"
+            className="w-full px-2 py-2 bg-muted border border-input rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-foreground"
           />
         </div>
       </div>

@@ -231,19 +231,3 @@
       outline-offset: 2px;
     }
   }
-
-  /* Mobile-friendly scrollbars */
-  @media (max-width: 768px) {
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: var(--muted-foreground);
-      border-radius: 2px;
-    }
-  }
