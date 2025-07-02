@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { Persona } from '../types';
 import { generatePersonas } from '../services/geminiService';
 import { personaService } from '../services/personaService';
 import { Search, Sparkles, Plus, Loader2 } from 'lucide-react';
-import debounce from 'lodash/debounce';
 
 interface PersonaSelectorProps {
   onPersonaSelect: (persona: Persona) => void;
@@ -70,42 +70,47 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced AI persona generation function
-  const debouncedGeneratePersonas = useCallback(
-    debounce(async (term: string) => {
-      if (term.trim().length >= 3) {
-        setIsGenerating(true);
-        setGenerationError(null);
-        setShowAiDropdown(true);
+  // Generate AI personas function
+  const generateAiPersonas = useCallback(async (term: string) => {
+    if (term.trim().length >= 3) {
+      setIsGenerating(true);
+      setGenerationError(null);
+      setShowAiDropdown(true);
 
-        try {
-          const personas = await generatePersonas(term);
-          setAiPersonas(personas);
-        } catch (error) {
-          setGenerationError(error instanceof Error ? error.message : 'Failed to generate personas');
-          setAiPersonas([]);
-        } finally {
-          setIsGenerating(false);
-        }
-      } else {
-        setShowAiDropdown(false);
+      try {
+        const personas = await generatePersonas(term);
+        setAiPersonas(personas);
+      } catch (error) {
+        setGenerationError(error instanceof Error ? error.message : 'Failed to generate personas');
         setAiPersonas([]);
+      } finally {
+        setIsGenerating(false);
       }
-    }, 500),
-    []
-  );
+    } else {
+      setShowAiDropdown(false);
+      setAiPersonas([]);
+    }
+  }, []);
 
-  // Handle search term changes
-  useEffect(() => {
-    debouncedGeneratePersonas(searchTerm);
-  }, [searchTerm, debouncedGeneratePersonas]);
+  // Handle Enter key press for search
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchTerm.trim()) {
+        generateAiPersonas(searchTerm);
+      }
+    }
+  };
 
-  // Cleanup debounced function on unmount
+  // Show existing personas that match search term
   useEffect(() => {
-    return () => {
-      debouncedGeneratePersonas.cancel();
-    };
-  }, [debouncedGeneratePersonas]);
+    if (searchTerm.trim()) {
+      setShowAiDropdown(true);
+    } else {
+      setShowAiDropdown(false);
+      setAiPersonas([]);
+    }
+  }, [searchTerm]);
 
   const handleAiPersonaSelect = async (aiPersona: { name: string; description: string; category: string }) => {
     try {
@@ -190,11 +195,18 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="bg-card/80 backdrop-blur-md border-b border-border p-4 sm:p-6">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground">Choose Your Chat Persona</h2>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Select from our collection or use AI to discover new personas.
-          </p>
+          <div className="space-y-2">
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Browse available personas below or search for new ones
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+              <span className="bg-muted px-2 py-1 rounded">📋 Browse existing personas</span>
+              <span className="bg-muted px-2 py-1 rounded">🔍 Filter by category</span>
+              <span className="bg-muted px-2 py-1 rounded">✨ Search & press Enter for new personas</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -221,16 +233,17 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
 
           <div className="w-full lg:w-auto lg:min-w-72 relative" ref={dropdownRef}>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 z-10" />
+              <Input
                 type="text"
-                placeholder="Search or Find a Persona"
+                placeholder="Search for a persona and press Enter to find new ones..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-muted border border-input rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-foreground"
+                onKeyPress={handleSearchKeyPress}
+                className="pl-10 pr-10 text-sm"
               />
               {isGenerating && (
-                <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 animate-spin" />
+                <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 animate-spin z-10" />
               )}
             </div>
 
@@ -241,7 +254,7 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
                   <div className="p-4 text-center">
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
                       <Sparkles className="h-4 w-4 animate-pulse" />
-                      <span className="text-sm">Finding personas...</span>
+                      <span className="text-sm">AI is creating new personas for you...</span>
                     </div>
                   </div>
                 )}
@@ -260,8 +273,11 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
                         <div className="p-3 border-b border-border">
                           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                             <Search className="h-4 w-4 text-primary" />
-                            Existing Personas
+                            Found Personas
                           </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Click any persona to start chatting
+                          </p>
                         </div>
                         {filteredPersonas.map((persona) => (
                           <button
@@ -296,15 +312,15 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
                     {aiPersonas.length > 0 && (
                       <>
                         {filteredPersonas.length > 0 && <div className="border-b border-border" />}
-                        <div className="p-3 border-b border-border">
-                          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                            New Personas
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Click to add and start chatting
-                          </p>
-                        </div>
+                                                 <div className="p-3 border-b border-border">
+                           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                             <Sparkles className="h-4 w-4 text-primary" />
+                             AI Generated Personas
+                           </div>
+                           <p className="text-xs text-muted-foreground mt-1">
+                             Click to add to collection and start chatting
+                           </p>
+                         </div>
                         {aiPersonas.map((persona, index) => {
                           const existingPersona = allPersonas.find(p => 
                             p.name.toLowerCase() === persona.name.toLowerCase()
@@ -344,8 +360,15 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
                 )}
 
                 {!isGenerating && !generationError && filteredPersonas.length === 0 && aiPersonas.length === 0 && searchTerm.length >= 3 && (
+                  <div className="p-4 text-center space-y-2">
+                    <p className="text-sm text-muted-foreground">No personas found for "{searchTerm}"</p>
+                    <p className="text-xs text-muted-foreground">Press Enter to let AI create new personas for this search</p>
+                  </div>
+                )}
+
+                {!isGenerating && !generationError && filteredPersonas.length === 0 && aiPersonas.length === 0 && searchTerm.length > 0 && searchTerm.length < 3 && (
                   <div className="p-4 text-center">
-                    <p className="text-sm text-muted-foreground">No personas found. Try a different search term.</p>
+                    <p className="text-sm text-muted-foreground">Type at least 3 characters and press Enter to search</p>
                   </div>
                 )}
               </div>
@@ -353,37 +376,76 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-          {filteredPersonas.map((persona) => (
-            <Button
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          {filteredPersonas.map((persona, index) => (
+            <div
               key={persona.id}
               onClick={() => onPersonaSelect(persona)}
-              variant="outline"
-              className="bg-card hover:bg-accent rounded-xl p-4 sm:p-5 text-left transition-all duration-200 group h-auto justify-start border-2 hover:border-primary/20 min-h-[120px] sm:min-h-[140px] touch-manipulation"
+              className="relative bg-card rounded-xl border-2 border-border hover:border-primary/50 transition-all duration-300 group cursor-pointer touch-manipulation aspect-square overflow-hidden"
             >
-              <div className="space-y-2 w-full overflow-hidden">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-sm sm:text-base text-foreground group-hover:text-primary break-words hyphens-auto leading-tight">
+              {/* Background Image */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url(https://picsum.photos/1000?random=${index + 1})`
+                }}
+              />
+              
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              
+              {/* Category Badge */}
+              <div className="absolute top-2 right-2 z-10">
+                <span className="text-xs px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white capitalize">
+                  {persona.category}
+                </span>
+              </div>
+              
+              {/* Name at Bottom */}
+              <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+                <h3 className="font-bold text-sm sm:text-base text-white leading-tight">
+                  {persona.name}
+                </h3>
+              </div>
+              
+              {/* Hover Overlay with Description */}
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center p-4 z-20">
+                <div className="text-center space-y-2">
+                  <h3 className="font-bold text-lg text-white">
                     {persona.name}
                   </h3>
-                  <span className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground capitalize self-start">
-                    {persona.category}
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm text-muted-foreground group-hover:text-foreground leading-relaxed break-words hyphens-auto overflow-hidden">
-                  <span className="line-clamp-3 sm:line-clamp-4">
+                  <p className="text-sm text-gray-200 leading-relaxed">
                     {persona.description}
-                  </span>
-                </p>
+                  </p>
+                </div>
               </div>
-            </Button>
+            </div>
           ))}
         </div>
 
-        {filteredPersonas.length === 0 && !isLoading && (
+        {filteredPersonas.length === 0 && !isLoading && !searchTerm && (
+          <div className="text-center py-12 space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-foreground">No Personas Yet</h3>
+              <p className="text-muted-foreground">Start by searching for a persona you'd like to chat with</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Try searching for:</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="bg-muted px-3 py-1 rounded-full text-xs">Einstein</span>
+                <span className="bg-muted px-3 py-1 rounded-full text-xs">Shakespeare</span>
+                <span className="bg-muted px-3 py-1 rounded-full text-xs">Iron Man</span>
+                <span className="bg-muted px-3 py-1 rounded-full text-xs">Chef</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Type any persona name and press Enter</p>
+            </div>
+          </div>
+        )}
+
+        {filteredPersonas.length === 0 && !isLoading && searchTerm && !showAiDropdown && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No personas found</p>
-            <p className="text-muted-foreground mt-4">Use the search bar above to discover and add new personas with AI</p>
+            <p className="text-muted-foreground">No personas match "{searchTerm}"</p>
+            <p className="text-muted-foreground mt-2">Press Enter to let AI create new personas</p>
           </div>
         )}
       </div>

@@ -193,7 +193,7 @@ Only return the JSON array, no additional text.`;
     if (!Array.isArray(personas)) {
       throw new Error('Invalid response format: expected array');
     }
-    console.log(personas);
+
     // Filter and validate personas
     const validPersonas = personas
       .filter(persona => 
