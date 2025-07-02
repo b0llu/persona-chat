@@ -28,16 +28,11 @@ export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProvider
   useEffect(() => {
     const root = window.document.documentElement;
     
-    console.log('ThemeProvider: Setting theme to', theme);
-    console.log('ThemeProvider: Current classes before:', root.className);
-    
     // Remove both classes first to avoid conflicts
     root.classList.remove('light', 'dark');
     
     // Add the current theme class
     root.classList.add(theme);
-    
-    console.log('ThemeProvider: Current classes after:', root.className);
     
     // Store in localStorage
     localStorage.setItem('theme', theme);
