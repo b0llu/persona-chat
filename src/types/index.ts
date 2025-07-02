@@ -21,6 +21,30 @@ export interface ChatSession {
   messages: Message[];
   createdAt: Date;
   updatedAt: Date;
+  userId: string;
+}
+
+export interface FirebaseChatMetadata {
+  id: string;
+  title: string;
+  persona: Persona | null;
+  userId: string;
+  messageCount: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface FirebaseChatData {
+  id: string;
+  messages: {
+    id: string;
+    text: string;
+    sender: 'user' | 'persona';
+    timestamp: number;
+  }[];
+  userId: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface User {
