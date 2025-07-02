@@ -240,7 +240,7 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={handleSearchKeyPress}
-                className="pl-10 pr-10 text-sm"
+                className="pl-10 pr-10 text-sm text-foreground"
               />
               {isGenerating && (
                 <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 animate-spin z-10" />
@@ -312,15 +312,15 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
                     {aiPersonas.length > 0 && (
                       <>
                         {filteredPersonas.length > 0 && <div className="border-b border-border" />}
-                                                 <div className="p-3 border-b border-border">
-                           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                             <Sparkles className="h-4 w-4 text-primary" />
-                             AI Generated Personas
-                           </div>
-                           <p className="text-xs text-muted-foreground mt-1">
-                             Click to add to collection and start chatting
-                           </p>
-                         </div>
+                        <div className="p-3 border-b border-border">
+                          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                            <Sparkles className="h-4 w-4 text-primary" />
+                            AI Generated Personas
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Click to add to collection and start chatting
+                          </p>
+                        </div>
                         {aiPersonas.map((persona, index) => {
                           const existingPersona = allPersonas.find(p => 
                             p.name.toLowerCase() === persona.name.toLowerCase()
