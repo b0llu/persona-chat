@@ -150,6 +150,41 @@
     --shadow-2xl: var(--shadow-2xl);
   }
 
+  /* Mobile-specific optimizations */
+  @supports (padding: max(0px)) {
+    .safe-area-inset-top {
+      padding-top: max(env(safe-area-inset-top), 0.5rem);
+    }
+    
+    .safe-area-inset-bottom {
+      padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+    }
+    
+    .safe-area-inset-left {
+      padding-left: max(env(safe-area-inset-left), 0.5rem);
+    }
+    
+    .safe-area-inset-right {
+      padding-right: max(env(safe-area-inset-right), 0.5rem);
+    }
+  }
+
+  /* Touch optimizations */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Prevent zoom on input focus for iOS */
+  @media screen and (max-width: 767px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
   /* Line clamp utilities for text truncation */
   .line-clamp-3 {
     display: -webkit-box;
@@ -173,4 +208,42 @@
 
   .hyphens-auto {
     hyphens: auto;
+  }
+
+  /* Smooth scrolling for better mobile experience */
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Better tap highlighting */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Improved focus visibility for mobile */
+  @media (pointer: coarse) {
+    button:focus-visible,
+    [role="button"]:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Mobile-friendly scrollbars */
+  @media (max-width: 768px) {
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--muted-foreground);
+      border-radius: 2px;
+    }
   }

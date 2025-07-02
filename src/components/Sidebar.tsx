@@ -12,6 +12,7 @@ interface SidebarProps {
   onChatSelect: (chat: ChatSession) => void;
   onDeleteChat: (chatId: string) => void;
   user: User | null;
+  isMobile?: boolean;
 }
 
 const Sidebar = ({ 
@@ -20,7 +21,8 @@ const Sidebar = ({
   onNewChat, 
   onChatSelect, 
   onDeleteChat, 
-  user 
+  user,
+  isMobile = false
 }: SidebarProps) => {
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
 
@@ -37,22 +39,38 @@ const Sidebar = ({
   };
 
   return (
-    <div className="w-72 bg-card border-r border-border flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-lg font-semibold text-foreground">Persona Chat</h1>
-          <ThemeToggle />
+    <div className={`${isMobile ? 'w-full h-full' : 'w-72'} bg-card border-r border-border flex flex-col h-full`}>
+      {/* Header - Hide on mobile since it's handled by the overlay */}
+      {!isMobile && (
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-lg font-semibold text-foreground">Persona Chat</h1>
+            <ThemeToggle />
+          </div>
+          <Button
+            onClick={onNewChat}
+            variant="outline"
+            className="w-full"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Chat
+          </Button>
         </div>
-        <Button
-          onClick={onNewChat}
-          variant="outline"
-          className="w-full"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Chat
-        </Button>
-      </div>
+      )}
+
+      {/* Mobile header with New Chat button */}
+      {isMobile && (
+        <div className="p-4 border-b border-border">
+          <Button
+            onClick={onNewChat}
+            variant="outline"
+            className="w-full"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Chat
+          </Button>
+        </div>
+      )}
 
       {/* Chat History */}
       <div className="flex-1 overflow-y-auto p-2">
@@ -117,25 +135,54 @@ const Sidebar = ({
         )}
       </div>
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3">
-          <img
-            src={user?.photoURL || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
-            alt={user?.displayName || 'User'}
-            className="w-8 h-8 rounded-full object-cover"
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {user?.displayName || 'User'}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {user?.email}
-            </p>
+      {/* User Profile - Only show on desktop */}
+      {!isMobile && (
+        <div className="p-4 border-t border-border">
+          <div className="flex items-center gap-3">
+            <img
+              src={user?.photoURL || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
+              alt={user?.displayName || 'User'}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
+                {user?.displayName || 'User'}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {user?.email}
+              </p>
+            </div>
+            <AuthButton />
           </div>
-          <AuthButton />
         </div>
-      </div>
+      )}
+
+      {/* Mobile User Profile */}
+      {isMobile && (
+        <div className="p-4 border-t border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <img
+                src={user?.photoURL || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
+                alt={user?.displayName || 'User'}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user?.displayName || 'User'}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <AuthButton />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

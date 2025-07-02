@@ -146,62 +146,62 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-card/80 backdrop-blur-md border-b border-border p-6">
+      <div className="bg-card/80 backdrop-blur-md border-b border-border p-4 sm:p-6">
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">Choose Your Chat Persona</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">Choose Your Chat Persona</h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Select from our diverse collection of personas to start an engaging conversation.
           </p>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
 
-      <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
           {CATEGORIES.map((category) => (
             <Button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               variant="outline"
-              className={`flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 ${
+              className={`flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-9 ${
                 selectedCategory === category.id
                   ? 'bg-accent text-accent-foreground'
                   : ''
               }`}
             >
               <span className="text-sm">{category.emoji}</span>
-              <span className="hidden xs:inline sm:inline">{category.name}</span>
+              <span className="hidden sm:inline">{category.name}</span>
             </Button>
           ))}
         </div>
 
-        <div className="w-full lg:w-auto lg:min-w-64">
+        <div className="w-full">
           <input
             type="text"
             placeholder="Search personas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            className="w-full px-4 py-3 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-base"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {filteredPersonas.map((persona) => (
           <Button
             key={persona.id}
             onClick={() => onPersonaSelect(persona)}
             variant="outline"
-            className="bg-card hover:bg-accent rounded-xl p-3 sm:p-4 md:p-5 text-left transition-all duration-200 group h-auto justify-start border-2 hover:border-primary/20 min-h-[120px] sm:min-h-[140px]"
+            className="bg-card hover:bg-accent rounded-xl p-4 sm:p-5 text-left transition-all duration-200 group h-auto justify-start border-2 hover:border-primary/20 min-h-[120px] sm:min-h-[140px] touch-manipulation"
           >
             <div className="space-y-2 w-full overflow-hidden">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
-                <h3 className="font-bold text-sm sm:text-base md:text-lg text-foreground group-hover:text-primary break-words hyphens-auto flex-1 leading-tight">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm sm:text-base text-foreground group-hover:text-primary break-words hyphens-auto leading-tight">
                   {persona.name}
                 </h3>
-                <span className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground capitalize flex-shrink-0 self-start">
+                <span className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground capitalize self-start">
                   {persona.category}
                 </span>
               </div>
