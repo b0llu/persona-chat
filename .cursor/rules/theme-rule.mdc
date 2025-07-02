@@ -1,5 +1,9 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+---
+description: 
+globs: 
+alwaysApply: true
+---
+When ever making any UI changes, use following theme
 
 :root {
     --background: #fcfcfc;

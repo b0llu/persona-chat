@@ -1,17 +1,15 @@
 import { useAuth } from '../hooks/useAuth';
+import { Button } from '@/components/ui/button';
 
 const AuthButton = () => {
   const { user, loading, signInWithGoogle, signOut } = useAuth();
 
   if (loading) {
     return (
-      <button
-        disabled
-        className="flex items-center justify-center px-6 py-3 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
-      >
-        <div className="w-5 h-5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+      <Button disabled variant="secondary">
+        <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin mr-2"></div>
         Loading...
-      </button>
+      </Button>
     );
   }
 
@@ -25,27 +23,28 @@ const AuthButton = () => {
             className="w-10 h-10 rounded-full"
           />
           <div>
-            <p className="text-sm font-medium text-gray-900">{user.displayName}</p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+            <p className="text-sm font-medium text-foreground">{user.displayName}</p>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <button
+        <Button
           onClick={signOut}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          variant="destructive"
         >
           Sign Out
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <button
+    <Button
       onClick={signInWithGoogle}
-      className="flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+      variant="secondary"
+      className="gap-2"
     >
       <svg
-        className="w-5 h-5 mr-3"
+        className="w-4 h-4"
         viewBox="0 0 24 24"
       >
         <path
@@ -66,7 +65,7 @@ const AuthButton = () => {
         />
       </svg>
       Continue with Google
-    </button>
+    </Button>
   );
 };
 
