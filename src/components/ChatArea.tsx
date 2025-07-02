@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Plus, Send } from 'lucide-react';
 import { Button } from './ui/button';
 import ChatMessage from './ChatMessage';
+import BouncingDots from './BouncingDots';
 import { Persona, ChatSession, User } from '../types';
 
 interface ChatAreaProps {
@@ -67,29 +68,28 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {chat.messages.map((message) => (
-          <ChatMessage
-            key={message.id}
-            message={message}
-            persona={persona}
-            user={user}
-          />
-        ))}
+        {chat.messages.map((message, index) => {
+          const isLastMessage = index === chat.messages.length - 1;
+          const isStreaming = isLastMessage && message.sender === 'persona' && !isLoading && message.text.length > 0;
+          
+          return (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              persona={persona}
+              user={user}
+              isStreaming={isStreaming}
+            />
+          );
+        })}
         
         {isLoading && (
           <div className="flex items-center gap-3 p-4">
             <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
               {persona.name.charAt(0).toUpperCase()}
             </div>
-            <div className="bg-card rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-2">
-                <div className="animate-pulse flex space-x-1">
-                  <div className="rounded-full bg-muted h-2 w-2"></div>
-                  <div className="rounded-full bg-muted h-2 w-2"></div>
-                  <div className="rounded-full bg-muted h-2 w-2"></div>
-                </div>
-                <span className="text-sm text-muted-foreground">typing...</span>
-              </div>
+            <div className="bg-card rounded-lg p-4 border border-border">
+              <BouncingDots />
             </div>
           </div>
         )}

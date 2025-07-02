@@ -5,6 +5,7 @@ import PersonaSelector from './PersonaSelector';
 import Sidebar from './Sidebar';
 import ChatArea from './ChatArea';
 import { Message, Persona, ChatSession } from '../types';
+import geminiService from '../services/geminiService';
 
 const ChatInterface = () => {
   const { chatId } = useParams();
@@ -111,28 +112,108 @@ const ChatInterface = () => {
     setCurrentChat(updatedChat);
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const personaResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: `As ${selectedPersona.name}, I understand your message. This is where I would respond in character! In a real implementation, this would be connected to an AI service that responds as the selected persona.`,
-        sender: 'persona',
-        timestamp: new Date(),
-      };
+    // Create an empty persona message that will be updated as we stream
+    const personaMessageId = (Date.now() + 1).toString();
+    const personaResponse: Message = {
+      id: personaMessageId,
+      text: '',
+      sender: 'persona',
+      timestamp: new Date(),
+    };
 
-      const finalMessages = [...updatedMessages, personaResponse];
-      const finalChat: ChatSession = {
-        ...updatedChat,
-        messages: finalMessages,
-        updatedAt: new Date(),
-      };
+    const messagesWithStreaming = [...updatedMessages, personaResponse];
+    const chatWithStreaming: ChatSession = {
+      ...updatedChat,
+      messages: messagesWithStreaming,
+      updatedAt: new Date(),
+    };
 
-      setChatSessions(prev => prev.map(chat => 
-        chat.id === currentChat.id ? finalChat : chat
-      ));
-      setCurrentChat(finalChat);
-      setIsLoading(false);
-    }, 1000);
+    setChatSessions(prev => prev.map(chat => 
+      chat.id === currentChat.id ? chatWithStreaming : chat
+    ));
+    setCurrentChat(chatWithStreaming);
+
+    try {
+      // Use Gemini API to generate streaming response
+      const conversationHistory = currentChat.messages.map(msg => ({
+        sender: msg.sender,
+        text: msg.text
+      }));
+
+      let accumulatedText = '';
+
+      await geminiService.generateStreamResponse({
+        persona: {
+          name: selectedPersona.name,
+          description: selectedPersona.description,
+          category: selectedPersona.category
+        },
+        userMessage: text,
+        conversationHistory
+      }, (chunk: string) => {
+        // Stop loading when we receive the first chunk
+        if (accumulatedText === '') {
+          setIsLoading(false);
+        }
+        
+        // Accumulate the streaming text
+        accumulatedText += chunk;
+        
+        // Update the persona message with the accumulated text
+        setChatSessions(prev => prev.map(chat => {
+          if (chat.id === currentChat.id) {
+            const updatedMessages = chat.messages.map(msg => 
+              msg.id === personaMessageId 
+                ? { ...msg, text: accumulatedText }
+                : msg
+            );
+            return { ...chat, messages: updatedMessages, updatedAt: new Date() };
+          }
+          return chat;
+        }));
+
+        // Also update the current chat state
+        setCurrentChat(prev => {
+          if (!prev || prev.id !== currentChat.id) return prev;
+          const updatedMessages = prev.messages.map(msg => 
+            msg.id === personaMessageId 
+              ? { ...msg, text: accumulatedText }
+              : msg
+          );
+          return { ...prev, messages: updatedMessages, updatedAt: new Date() };
+        });
+      });
+
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      
+      // Update the streaming message with an error response
+      const errorText = `I apologize, but I'm having trouble responding right now. Please try again in a moment.`;
+      
+      setChatSessions(prev => prev.map(chat => {
+        if (chat.id === currentChat.id) {
+          const updatedMessages = chat.messages.map(msg => 
+            msg.id === personaMessageId 
+              ? { ...msg, text: errorText }
+              : msg
+          );
+          return { ...chat, messages: updatedMessages, updatedAt: new Date() };
+        }
+        return chat;
+      }));
+
+      setCurrentChat(prev => {
+        if (!prev || prev.id !== currentChat.id) return prev;
+        const updatedMessages = prev.messages.map(msg => 
+          msg.id === personaMessageId 
+            ? { ...msg, text: errorText }
+            : msg
+        );
+        return { ...prev, messages: updatedMessages, updatedAt: new Date() };
+      });
+          } finally {
+        setIsLoading(false);
+      }
   };
 
   const handleChatSelect = (chat: ChatSession) => {

@@ -22,10 +22,18 @@ interface ChatMessageProps {
   message: Message;
   persona: Persona;
   user: User | null;
+  isStreaming?: boolean;
 }
 
-const ChatMessage = ({ message, persona, user }: ChatMessageProps) => {
+import StreamingText from './StreamingText';
+
+const ChatMessage = ({ message, persona, user, isStreaming = false }: ChatMessageProps) => {
   const isUser = message.sender === 'user';
+  
+  // Don't render empty persona messages (they're waiting for streaming to start)
+  if (!isUser && message.text === '' && !isStreaming) {
+    return null;
+  }
 
   return (
     <div className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -43,7 +51,15 @@ const ChatMessage = ({ message, persona, user }: ChatMessageProps) => {
               : 'bg-card text-card-foreground border border-border'
           }`}
         >
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+          {!isUser && isStreaming ? (
+            <StreamingText
+              text={message.text}
+              isComplete={false}
+              className="text-sm leading-relaxed whitespace-pre-wrap"
+            />
+          ) : (
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+          )}
         </div>
         
         <div className={`flex items-center gap-2 mt-1 text-xs text-muted-foreground ${

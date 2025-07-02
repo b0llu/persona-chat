@@ -202,7 +202,7 @@ const Landing = () => {
               className="text-xl font-bold px-16 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-primary shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 mt-2"
               size="lg"
             >
-                             {isLoading ? (
+            {isLoading ? (
                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                ) : (
                  <>

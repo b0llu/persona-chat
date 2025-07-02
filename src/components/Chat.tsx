@@ -6,6 +6,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { Button } from './ui/button';
 import PersonaSelector from './PersonaSelector';
 import ChatMessage from './ChatMessage';
+import geminiService from '../services/geminiService';
 
 interface Message {
   id: string;
@@ -65,21 +66,72 @@ const Chat = () => {
       timestamp: new Date(),
     };
 
+    const currentInputMessage = inputMessage;
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
 
-    // Simulate AI response (in a real app, this would call an AI API)
-    setTimeout(() => {
-      const personaResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: `As ${selectedPersona.name}, I understand your message. This is where I would respond in character! In a real implementation, this would be connected to an AI service that responds as the selected persona.`,
-        sender: 'persona',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, personaResponse]);
-      setIsLoading(false);
-    }, 1000);
+    // Create an empty persona message that will be updated as we stream
+    const personaMessageId = (Date.now() + 1).toString();
+    const personaResponse: Message = {
+      id: personaMessageId,
+      text: '',
+      sender: 'persona',
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, personaResponse]);
+    
+    // Keep loading true until we start receiving text
+
+    try {
+      // Use Gemini API to generate streaming response
+      const conversationHistory = messages.map(msg => ({
+        sender: msg.sender,
+        text: msg.text
+      }));
+
+      let accumulatedText = '';
+
+      await geminiService.generateStreamResponse({
+        persona: {
+          name: selectedPersona.name,
+          description: selectedPersona.description,
+          category: selectedPersona.category
+        },
+        userMessage: currentInputMessage,
+        conversationHistory
+      }, (chunk: string) => {
+        // Stop loading when we receive the first chunk
+        if (accumulatedText === '') {
+          setIsLoading(false);
+        }
+        
+        // Accumulate the streaming text
+        accumulatedText += chunk;
+        
+        // Update the persona message with the accumulated text
+        setMessages(prev => prev.map(msg => 
+          msg.id === personaMessageId 
+            ? { ...msg, text: accumulatedText }
+            : msg
+        ));
+      });
+
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      
+      // Update the streaming message with an error response
+      const errorText = `I apologize, but I'm having trouble responding right now. Please try again in a moment.`;
+      
+      setMessages(prev => prev.map(msg => 
+        msg.id === personaMessageId 
+          ? { ...msg, text: errorText }
+          : msg
+      ));
+          } finally {
+        setIsLoading(false);
+      }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -174,14 +226,20 @@ const Chat = () => {
 
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              message={message}
-              persona={selectedPersona}
-              user={user}
-            />
-          ))}
+          {messages.map((message, index) => {
+            const isLastMessage = index === messages.length - 1;
+            const isStreaming = isLastMessage && message.sender === 'persona' && !isLoading && message.text.length > 0;
+            
+            return (
+              <ChatMessage
+                key={message.id}
+                message={message}
+                persona={selectedPersona}
+                user={user}
+                isStreaming={isStreaming}
+              />
+            );
+          })}
           {isLoading && (
             <div className="flex items-center gap-3 p-4">
               <img
@@ -189,14 +247,11 @@ const Chat = () => {
                 alt={selectedPersona.name}
                 className="w-8 h-8 rounded-full"
               />
-              <div className="bg-card rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <div className="animate-pulse flex space-x-1">
-                    <div className="rounded-full bg-muted h-2 w-2"></div>
-                    <div className="rounded-full bg-muted h-2 w-2"></div>
-                    <div className="rounded-full bg-muted h-2 w-2"></div>
-                  </div>
-                  <span className="text-sm text-muted-foreground">typing...</span>
+              <div className="bg-card rounded-lg p-4">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
               </div>
             </div>
