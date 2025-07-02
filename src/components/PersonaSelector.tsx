@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Persona } from '../types';
 import { generatePersonas } from '../services/geminiService';
 import { Search, Sparkles, Plus, Loader2 } from 'lucide-react';
+import debounce from 'lodash/debounce';
 
 interface PersonaSelectorProps {
   onPersonaSelect: (persona: Persona) => void;
@@ -146,7 +147,6 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [allPersonas, setAllPersonas] = useState<Persona[]>(PERSONAS);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Save custom personas to localStorage
@@ -173,20 +173,16 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle AI persona generation with debounce
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    if (searchTerm.trim().length >= 3) {
-      searchTimeoutRef.current = setTimeout(async () => {
+  // Debounced AI persona generation function
+  const debouncedGeneratePersonas = useCallback(
+    debounce(async (term: string) => {
+      if (term.trim().length >= 3) {
         setIsGenerating(true);
         setGenerationError(null);
         setShowAiDropdown(true);
 
         try {
-          const personas = await generatePersonas(searchTerm);
+          const personas = await generatePersonas(term);
           setAiPersonas(personas);
         } catch (error) {
           setGenerationError(error instanceof Error ? error.message : 'Failed to generate personas');
@@ -194,18 +190,25 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
         } finally {
           setIsGenerating(false);
         }
-      }, 500);
-    } else {
-      setShowAiDropdown(false);
-      setAiPersonas([]);
-    }
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+      } else {
+        setShowAiDropdown(false);
+        setAiPersonas([]);
       }
+    }, 500),
+    []
+  );
+
+  // Handle search term changes
+  useEffect(() => {
+    debouncedGeneratePersonas(searchTerm);
+  }, [searchTerm, debouncedGeneratePersonas]);
+
+  // Cleanup debounced function on unmount
+  useEffect(() => {
+    return () => {
+      debouncedGeneratePersonas.cancel();
     };
-  }, [searchTerm]);
+  }, [debouncedGeneratePersonas]);
 
   const handleAiPersonaSelect = (aiPersona: { name: string; description: string; category: string }) => {
     // Check if persona already exists

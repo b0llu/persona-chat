@@ -7,20 +7,13 @@ import { Button } from './ui/button';
 import PersonaSelector from './PersonaSelector';
 import ChatMessage from './ChatMessage';
 import geminiService from '../services/geminiService';
+import { Persona } from '../types';
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'persona';
   timestamp: Date;
-}
-
-interface Persona {
-  id: string;
-  name: string;
-  description: string;
-  avatar: string;
-  category: 'celebrity' | 'anime' | 'cartoon' | 'historical' | 'fictional';
 }
 
 const Chat = () => {
