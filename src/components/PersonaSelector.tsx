@@ -4,6 +4,7 @@ import { Input } from './ui/input';
 import { Persona } from '../types';
 import { generatePersonas } from '../services/geminiService';
 import { personaService } from '../services/personaService';
+import { useAuth } from '../hooks/useAuth';
 import { Search, Sparkles, Plus, Loader2 } from 'lucide-react';
 
 interface PersonaSelectorProps {
@@ -11,6 +12,7 @@ interface PersonaSelectorProps {
 }
 
 const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [aiPersonas, setAiPersonas] = useState<Array<{
@@ -114,8 +116,6 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
 
   const handleAiPersonaSelect = async (aiPersona: { name: string; description: string; category: string }) => {
     try {
-
-
       const newPersona: Persona = {
         id: `ai-${Date.now()}-${aiPersona.name.toLowerCase().replace(/\s+/g, '-')}`,
         name: aiPersona.name,
@@ -125,8 +125,8 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
         isGenerated: true,
       };
 
-      // Save to Firebase
-      const saved = await personaService.savePersona(newPersona);
+      // Save to Firebase with user ID for analytics
+      const saved = await personaService.savePersona(newPersona, user?.uid);
       
       if (saved) {
         // Add to local state

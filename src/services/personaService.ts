@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Persona } from '../types';
+import analyticsService from './analyticsService';
 
 const PERSONAS_COLLECTION = 'personas';
 
@@ -40,7 +41,7 @@ export const personaService = {
   },
 
   // Save a new persona to Firebase
-  async savePersona(persona: Persona): Promise<boolean> {
+  async savePersona(persona: Persona, userId?: string): Promise<boolean> {
     try {
       const personaRef = doc(db, PERSONAS_COLLECTION, persona.id);
       await setDoc(personaRef, {
@@ -52,6 +53,16 @@ export const personaService = {
         createdAt: new Date(),
         updatedAt: new Date()
       });
+      
+      // Track persona added event if userId is provided
+      if (userId) {
+        analyticsService.trackPersonaAdded(userId, {
+          persona_id: persona.id,
+          persona_name: persona.name,
+          persona_category: persona.category,
+          is_generated: persona.isGenerated || false,
+        });
+      }
       
       return true;
     } catch (error) {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase/config';
+import analyticsService from '../services/analyticsService';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -19,6 +20,15 @@ export const useAuth = () => {
     try {
       setLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
+      
+      // Track successful login
+      if (result.user) {
+        analyticsService.trackLogin(result.user.uid, {
+          method: 'google',
+          success: true,
+        });
+      }
+      
       return result.user;
     } catch (error) {
       console.error('Error signing in with Google:', error);

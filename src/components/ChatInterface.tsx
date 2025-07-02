@@ -9,6 +9,7 @@ import { Button } from './ui/button';
 import { Message, Persona, ChatSession, FirebaseChatMetadata } from '../types';
 import geminiService from '../services/geminiService';
 import * as chatService from '../services/chatService';
+import analyticsService from '../services/analyticsService';
 
 const ChatInterface = () => {
   const { chatId } = useParams();
@@ -238,6 +239,16 @@ const ChatInterface = () => {
           createdAt: updatedChat.createdAt,
           updatedAt: updatedChat.updatedAt,
         });
+        
+        // Track chat created with persona info (this is when it's actually saved)
+        if (updatedChat.persona) {
+          analyticsService.trackChatCreated(user.uid, {
+            chat_id: updatedChat.id,
+            persona_id: updatedChat.persona.id,
+            persona_name: updatedChat.persona.name,
+            persona_category: updatedChat.persona.category,
+          });
+        }
       } catch (error) {
         console.error('Error creating chat in Firebase:', error);
         // Continue with local state even if Firebase fails
