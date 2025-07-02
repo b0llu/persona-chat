@@ -51,7 +51,7 @@ const ChatMessage = ({ message, persona, user, isStreaming = false }: ChatMessag
               : 'bg-card text-card-foreground border border-border'
           }`}
         >
-          {!isUser && isStreaming ? (
+          {!isUser && isStreaming && message.id !== '1' ? (
             <StreamingText
               text={message.text}
               isComplete={false}
