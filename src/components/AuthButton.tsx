@@ -1,4 +1,5 @@
 import { useAuth } from '../hooks/useAuth';
+import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AuthButton = () => {
@@ -6,7 +7,7 @@ const AuthButton = () => {
 
   if (loading) {
     return (
-      <Button disabled variant="secondary">
+      <Button disabled variant="outline">
         <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin mr-2"></div>
         Loading...
       </Button>
@@ -15,32 +16,21 @@ const AuthButton = () => {
 
   if (user) {
     return (
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-3">
-          <img
-            src={user.photoURL || ''}
-            alt={user.displayName || 'User'}
-            className="w-10 h-10 rounded-full"
-          />
-          <div>
-            <p className="text-sm font-medium text-foreground">{user.displayName}</p>
-            <p className="text-xs text-muted-foreground">{user.email}</p>
-          </div>
-        </div>
-        <Button
-          onClick={signOut}
-          variant="destructive"
-        >
-          Sign Out
-        </Button>
-      </div>
+      <Button
+        onClick={signOut}
+        variant="outline"
+        size="icon"
+        className="flex-shrink-0"
+      >
+        <LogOut className="w-4 h-4" />
+      </Button>
     );
   }
 
   return (
     <Button
       onClick={signInWithGoogle}
-      variant="secondary"
+      variant="outline"
       className="gap-2"
     >
       <svg

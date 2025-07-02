@@ -3,9 +3,11 @@ description:
 globs: 
 alwaysApply: true
 ---
-When ever making any UI changes, use following theme
+void using borders, and shadows.
 
-Avoid using borders, and shadows.
+Always use shadcn Components.
+
+When ever making any UI changes, use following theme
 
 :root {
     --background: #f9f9f9;

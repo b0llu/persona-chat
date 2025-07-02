@@ -149,3 +149,28 @@
     --shadow-xl: var(--shadow-xl);
     --shadow-2xl: var(--shadow-2xl);
   }
+
+  /* Line clamp utilities for text truncation */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Word breaking utilities */
+  .break-words {
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .hyphens-auto {
+    hyphens: auto;
+  }
