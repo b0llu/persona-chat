@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthButton from './AuthButton';
 import { ThemeToggle } from './ThemeToggle';
@@ -17,11 +17,7 @@ interface Message {
 }
 
 const Chat = () => {
-  const { chatId } = useParams();
   const navigate = useNavigate();
-  
-  // chatId will be used in future for loading specific chats
-  console.log('Current chat ID:', chatId);
   const { user } = useAuth();
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
