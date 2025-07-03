@@ -19,7 +19,6 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
   const [inputMessage, setInputMessage] = useState('');
   const [isChatActive, setIsChatActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,14 +30,6 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
     }, 100);
   }, [chat?.messages]);
 
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = Math.min(scrollHeight, 120) + 'px';
-    }
-  }, [inputMessage]);
 
   const handleSend = () => {
     if (!inputMessage.trim()) return;
@@ -122,14 +113,12 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
               <div className="flex gap-2 lg:gap-3 items-end">
                 <div className="flex-1 relative">
                   <Textarea
-                    ref={textareaRef}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
                     placeholder={`Message ${persona.name}...`}
-                    className="w-full resize-none bg-transparent border-none px-3 lg:px-4 py-2 lg:py-3 text-sm lg:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[44px] max-h-[120px] leading-5"
+                    className="w-full resize-none bg-transparent border-none px-3 lg:px-4 py-2 lg:py-3 text-sm lg:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[44px] max-h-[250px] leading-5"
                     rows={1}
-                    style={{ height: '44px' }}
                   />
                 </div>
                 <Button
