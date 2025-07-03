@@ -26,7 +26,9 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
   };
 
   useEffect(() => {
-    scrollToBottom();
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
   }, [chat?.messages]);
 
   // Auto-resize textarea
