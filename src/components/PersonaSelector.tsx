@@ -5,6 +5,13 @@ import { Persona } from '../types';
 import { personaService } from '../services/personaService';
 import { Plus, Loader2, Search } from 'lucide-react';
 import PersonaSearchModal from './PersonaSearchModal';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 interface PersonaSelectorProps {
   onPersonaSelect: (persona: Persona) => void;
@@ -29,7 +36,7 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
         setAllPersonas(personas);
         
         // Build categories dynamically based on existing personas
-        const existingCategories = new Set(personas.map(p => p.category));
+        const existingCategories = new Set(personas.map(p => p.category.toLowerCase()));
         const categories = [{ id: 'all', name: 'All Personas' }];
         
         existingCategories.forEach(category => {
@@ -73,7 +80,7 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
   };
 
   const filteredPersonas = allPersonas.filter((persona) => {
-    const matchesCategory = selectedCategory === 'all' || persona.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || persona.category.toLowerCase() === selectedCategory.toLowerCase();
     const matchesSearch = searchTerm === '' || 
       persona.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       persona.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -124,21 +131,19 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
       <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
 
         <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
-          <div className="flex gap-2 overflow-x-auto">
-            {allCategories.map((category) => (
-              <Button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                className={`flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-9 transition-all duration-200 ${
-                  selectedCategory === category.id
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm hover:bg-primary/90'
-                    : 'hover:bg-accent hover:text-accent-foreground'
-                }`}
-              >
-                <span className="">{category.name}</span>
-              </Button>
-            ))}
+          <div className="flex-shrink-0">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-40 text-foreground">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent className="text-foreground">
+                {allCategories.map((category) => (
+                  <SelectItem key={category.id} value={category.id} className="text-foreground">
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex gap-2 w-full lg:w-auto">
