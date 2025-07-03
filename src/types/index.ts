@@ -11,7 +11,6 @@ export interface Persona {
   description: string;
   avatar: string;
   category: 'celebrity' | 'anime' | 'cartoon' | 'historical' | 'fictional' | 'custom';
-  isGenerated?: boolean;
 }
 
 export interface ChatSession {

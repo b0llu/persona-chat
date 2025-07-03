@@ -1,35 +1,24 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Persona } from '../types';
-import { generatePersonas } from '../services/geminiService';
 import { personaService } from '../services/personaService';
-import { mixpanelService } from '../services/mixpanelService';
-import { useAuth } from '../hooks/useAuth';
-import { Search, Sparkles, Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Search } from 'lucide-react';
+import PersonaSearchModal from './PersonaSearchModal';
 
 interface PersonaSelectorProps {
   onPersonaSelect: (persona: Persona) => void;
 }
 
 const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
-  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [aiPersonas, setAiPersonas] = useState<Array<{
-    name: string;
-    description: string;
-    category: string;
-  }>>([]);
-  const [showAiDropdown, setShowAiDropdown] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generationError, setGenerationError] = useState<string | null>(null);
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [allCategories, setAllCategories] = useState<{ id: string; name: string }[]>([
     { id: 'all', name: 'All Personas' }
   ]);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Load personas from Firebase on component mount
   useEffect(() => {
@@ -61,115 +50,33 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
     loadPersonasFromFirebase();
   }, []);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowAiDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Generate AI personas function
-  const generateAiPersonas = useCallback(async (term: string) => {
-    if (term.trim().length >= 3) {
-      setIsGenerating(true);
-      setGenerationError(null);
-      setShowAiDropdown(true);
-
-      try {
-        const personas = await generatePersonas(term);
-        setAiPersonas(personas);
-      } catch (error) {
-        setGenerationError(error instanceof Error ? error.message : 'Failed to generate personas');
-        setAiPersonas([]);
-      } finally {
-        setIsGenerating(false);
-      }
-    } else {
-      setShowAiDropdown(false);
-      setAiPersonas([]);
-    }
-  }, []);
-
-  // Handle Enter key press for search
-  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (searchTerm.trim()) {
-        generateAiPersonas(searchTerm);
-      }
-    }
-  };
-
-  // Show existing personas that match search term
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      setShowAiDropdown(true);
-    } else {
-      setShowAiDropdown(false);
-      setAiPersonas([]);
-    }
-  }, [searchTerm]);
-
-  const handleAiPersonaSelect = async (aiPersona: { name: string; description: string; category: string }) => {
-    try {
-      const newPersona: Persona = {
-        id: `ai-${Date.now()}-${aiPersona.name.toLowerCase().replace(/\s+/g, '-')}`,
-        name: aiPersona.name,
-        description: aiPersona.description,
-        avatar: '',
-        category: aiPersona.category as Persona['category'],
-        isGenerated: true,
-      };
-
-      // Save to Firebase with user ID for analytics
-      const saved = await personaService.savePersona(newPersona, user?.uid);
+  // Handle new persona added from modal
+  const handlePersonaAdded = (newPersona: Persona) => {
+    setAllPersonas(prev => {
+      const updatedPersonas = [...prev, newPersona];
       
-      if (saved) {
-        // Track persona creation in Mixpanel
-        mixpanelService.trackPersonaAdded(newPersona, user?.uid);
-        // Add to local state
-        setAllPersonas(prev => {
-          const updatedPersonas = [...prev, newPersona];
-          
-          // Update categories when new persona is added
-          const existingCategories = new Set(updatedPersonas.map(p => p.category));
-          const categories = [{ id: 'all', name: 'All Personas' }];
-          
-          existingCategories.forEach(category => {
-            categories.push({
-              id: category,
-              name: category.charAt(0).toUpperCase() + category.slice(1)
-            });
-          });
-          
-          setAllCategories(categories);
-          
-          return updatedPersonas;
+      // Update categories when new persona is added
+      const existingCategories = new Set(updatedPersonas.map(p => p.category));
+      const categories = [{ id: 'all', name: 'All Personas' }];
+      
+      existingCategories.forEach(category => {
+        categories.push({
+          id: category,
+          name: category.charAt(0).toUpperCase() + category.slice(1)
         });
-        
-        // Clear search and hide dropdown
-        setSearchTerm('');
-        setShowAiDropdown(false);
-        setAiPersonas([]);
-        
-        // Select the persona
-        onPersonaSelect(newPersona);
-      } else {
-        console.error('Failed to save persona to Firebase');
-      }
-    } catch (error) {
-      console.error('Error handling AI persona selection:', error);
-    }
+      });
+      
+      setAllCategories(categories);
+      
+      return updatedPersonas;
+    });
   };
 
   const filteredPersonas = allPersonas.filter((persona) => {
     const matchesCategory = selectedCategory === 'all' || persona.category === selectedCategory;
-    const matchesSearch = searchTerm === '' || persona.name.toLowerCase().includes(searchTerm.toLowerCase()) || persona.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = searchTerm === '' || 
+      persona.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      persona.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -202,12 +109,12 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
           <h2 className="text-xl sm:text-2xl font-bold text-foreground">Choose Your Chat Persona</h2>
           <div className="space-y-2">
             <p className="text-muted-foreground text-sm sm:text-base">
-              Browse available personas below or search for new ones
+              Browse and search existing personas or create new ones with AI
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
               <span className="bg-muted px-2 py-1 rounded">📋 Browse existing personas</span>
-              <span className="bg-muted px-2 py-1 rounded">🔍 Filter by category</span>
-              <span className="bg-muted px-2 py-1 rounded">✨ Search & press Enter for new personas</span>
+              <span className="bg-muted px-2 py-1 rounded">🔍 Search & filter personas</span>
+              <span className="bg-muted px-2 py-1 rounded">✨ Add new personas with AI</span>
             </div>
           </div>
         </div>
@@ -234,148 +141,25 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
             ))}
           </div>
 
-          <div className="w-full lg:w-auto lg:min-w-72 relative" ref={dropdownRef}>
-            <div className="relative">
+          <div className="flex gap-2 w-full lg:w-auto">
+            <Button 
+              onClick={() => setIsModalOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2 flex-shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              Add Persona
+            </Button>
+            <div className="relative flex-1 lg:min-w-72">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 z-10" />
               <Input
                 type="text"
-                placeholder="Search for a persona and press Enter to find new ones..."
+                placeholder="Search personas..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
-                className="pl-10 pr-10 text-sm text-foreground"
+                className="pl-10 text-sm text-foreground"
               />
-              {isGenerating && (
-                <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 animate-spin z-10" />
-              )}
             </div>
-
-            {/* Search Results Dropdown */}
-            {showAiDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
-                {isGenerating && (
-                  <div className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Sparkles className="h-4 w-4 animate-pulse" />
-                      <span className="text-sm">AI is creating new personas for you...</span>
-                    </div>
-                  </div>
-                )}
-
-                {generationError && (
-                  <div className="p-4 text-center">
-                    <p className="text-sm text-destructive">{generationError}</p>
-                  </div>
-                )}
-
-                {!isGenerating && !generationError && (filteredPersonas.length > 0 || aiPersonas.length > 0) && (
-                  <div className="py-2">
-                    {/* Existing personas that match search */}
-                    {filteredPersonas.length > 0 && (
-                      <>
-                        <div className="p-3 border-b border-border">
-                          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                            <Search className="h-4 w-4 text-primary" />
-                            Found Personas
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Click any persona to start chatting
-                          </p>
-                        </div>
-                        {filteredPersonas.map((persona) => (
-                          <button
-                            key={persona.id}
-                            onClick={() => onPersonaSelect(persona)}
-                            className="w-full px-4 py-3 hover:bg-accent text-left transition-colors duration-200 group"
-                          >
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="font-medium text-sm text-foreground group-hover:text-primary">
-                                  {persona.name}
-                                </h4>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground capitalize">
-                                    {persona.category}
-                                  </span>
-                                  {persona.isGenerated && (
-                                    <Sparkles className="h-3 w-3 text-primary" />
-                                  )}
-                                </div>
-                              </div>
-                              <p className="text-xs text-muted-foreground group-hover:text-foreground line-clamp-2">
-                                {persona.description}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </>
-                    )}
-
-                    {/* AI generated personas */}
-                    {aiPersonas.length > 0 && (
-                      <>
-                        {filteredPersonas.length > 0 && <div className="border-b border-border" />}
-                        <div className="p-3 border-b border-border">
-                          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                            AI Generated Personas
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Click to add to collection and start chatting
-                          </p>
-                        </div>
-                        {aiPersonas.map((persona, index) => {
-                          const existingPersona = allPersonas.find(p => 
-                            p.name.toLowerCase() === persona.name.toLowerCase()
-                          );
-                          
-                          // Don't show AI personas that already exist
-                          if (existingPersona) return null;
-                          
-                          return (
-                            <button
-                              key={index}
-                              onClick={() => handleAiPersonaSelect(persona)}
-                              className="w-full px-4 py-3 hover:bg-accent text-left transition-colors duration-200 group"
-                            >
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-medium text-sm text-foreground group-hover:text-primary">
-                                    {persona.name}
-                                  </h4>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground capitalize">
-                                      {persona.category}
-                                    </span>
-                                    <Plus className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
-                                  </div>
-                                </div>
-                                <p className="text-xs text-muted-foreground group-hover:text-foreground line-clamp-2">
-                                  {persona.description}
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {!isGenerating && !generationError && filteredPersonas.length === 0 && aiPersonas.length === 0 && searchTerm.length >= 3 && (
-                  <div className="p-4 text-center space-y-2">
-                    <p className="text-sm text-muted-foreground">No personas found for "{searchTerm}"</p>
-                    <p className="text-xs text-muted-foreground">Press Enter to let AI create new personas for this search</p>
-                  </div>
-                )}
-
-                {!isGenerating && !generationError && filteredPersonas.length === 0 && aiPersonas.length === 0 && searchTerm.length > 0 && searchTerm.length < 3 && (
-                  <div className="p-4 text-center">
-                    <p className="text-sm text-muted-foreground">Type at least 3 characters and press Enter to search</p>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -426,32 +210,51 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
           ))}
         </div>
 
-        {filteredPersonas.length === 0 && !isLoading && !searchTerm && (
+        {filteredPersonas.length === 0 && !isLoading && (
           <div className="text-center py-12 space-y-4">
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">No Personas Yet</h3>
-              <p className="text-muted-foreground">Start by searching for a persona you'd like to chat with</p>
+              {searchTerm ? (
+                <>
+                  <h3 className="text-lg font-semibold text-foreground">No Matching Personas</h3>
+                  <p className="text-muted-foreground">
+                    No personas match "{searchTerm}" in the {selectedCategory === 'all' ? 'all categories' : selectedCategory + ' category'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Try a different search term or create a new persona with AI
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-semibold text-foreground">No Personas Yet</h3>
+                  <p className="text-muted-foreground">
+                    {selectedCategory === 'all' 
+                      ? "Start by adding a persona you'd like to chat with"
+                      : `No personas in the ${selectedCategory} category yet`
+                    }
+                  </p>
+                </>
+              )}
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Try searching for:</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <span className="bg-muted px-3 py-1 rounded-full text-xs">Einstein</span>
-                <span className="bg-muted px-3 py-1 rounded-full text-xs">Shakespeare</span>
-                <span className="bg-muted px-3 py-1 rounded-full text-xs">Iron Man</span>
-                <span className="bg-muted px-3 py-1 rounded-full text-xs">Chef</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">Type any persona name and press Enter</p>
-            </div>
-          </div>
-        )}
-
-        {filteredPersonas.length === 0 && !isLoading && searchTerm && !showAiDropdown && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No personas match "{searchTerm}"</p>
-            <p className="text-muted-foreground mt-2">Press Enter to let AI create new personas</p>
+            <Button 
+              onClick={() => setIsModalOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2 ml-auto mr-auto"
+            >
+              <Plus className="h-4 w-4" />
+              {searchTerm ? 'Create New Persona' : 'Add Your First Persona'}
+            </Button>
           </div>
         )}
       </div>
+
+      {/* Persona Search Modal */}
+      <PersonaSearchModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onPersonaSelect={onPersonaSelect}
+        existingPersonas={allPersonas}
+        onPersonaAdded={handlePersonaAdded}
+      />
     </div>
   );
 };

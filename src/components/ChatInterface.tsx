@@ -454,7 +454,6 @@ const ChatInterface = () => {
             onNewChat={createNewChat}
             onChatSelect={handleChatSelect}
             onDeleteChat={handleDeleteChat}
-            user={user}
           />
         </div>
 
@@ -507,7 +506,6 @@ const ChatInterface = () => {
                   onNewChat={createNewChat}
                   onChatSelect={handleChatSelect}
                   onDeleteChat={handleDeleteChat}
-                  user={user}
                   isMobile={true}
                 />
               </div>
@@ -655,7 +653,6 @@ const ChatInterface = () => {
                 onNewChat={createNewChat}
                 onChatSelect={handleChatSelect}
                 onDeleteChat={handleDeleteChat}
-                user={user}
                 isMobile={true}
               />
             </div>
@@ -671,7 +668,6 @@ const ChatInterface = () => {
           onNewChat={createNewChat}
           onChatSelect={handleChatSelect}
           onDeleteChat={handleDeleteChat}
-          user={user}
         />
       </div>
       

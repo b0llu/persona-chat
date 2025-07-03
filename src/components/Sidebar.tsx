@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import AuthButton from './AuthButton';
 import { ThemeToggle } from './ThemeToggle';
-import { ChatSession, User } from '../types';
+import { ChatSession } from '../types';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarProps {
   chatSessions: ChatSession[];
@@ -11,7 +13,6 @@ interface SidebarProps {
   onNewChat: () => void;
   onChatSelect: (chat: ChatSession) => void;
   onDeleteChat: (chatId: string) => void;
-  user: User | null;
   isMobile?: boolean;
 }
 
@@ -21,9 +22,10 @@ const Sidebar = ({
   onNewChat, 
   onChatSelect, 
   onDeleteChat, 
-  user,
   isMobile = false
 }: SidebarProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
 
   const formatDate = (date: Date) => {
@@ -44,7 +46,12 @@ const Sidebar = ({
       {!isMobile && (
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-lg font-semibold text-foreground">Persona Chat</h1>
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="text-lg font-semibold text-foreground hover:text-primary transition-colors duration-200 cursor-pointer"
+            >
+              Persona Chat
+            </button>
             <ThemeToggle />
           </div>
           <Button

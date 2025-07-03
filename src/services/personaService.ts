@@ -27,8 +27,7 @@ export const personaService = {
           name: data.name,
           description: data.description,
           avatar: data.avatar || '',
-          category: data.category,
-          isGenerated: data.isGenerated || false
+          category: data.category
         });
       });
       
@@ -48,7 +47,6 @@ export const personaService = {
         description: persona.description,
         avatar: persona.avatar,
         category: persona.category,
-        isGenerated: persona.isGenerated || false,
         createdBy: userId,
         createdAt: new Date(),
         updatedAt: new Date()
