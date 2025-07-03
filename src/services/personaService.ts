@@ -8,7 +8,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Persona } from '../types';
-import analyticsService from './analyticsService';
 
 const PERSONAS_COLLECTION = 'personas';
 
@@ -50,19 +49,10 @@ export const personaService = {
         avatar: persona.avatar,
         category: persona.category,
         isGenerated: persona.isGenerated || false,
+        createdBy: userId,
         createdAt: new Date(),
         updatedAt: new Date()
       });
-      
-      // Track persona added event if userId is provided
-      if (userId) {
-        analyticsService.trackPersonaAdded(userId, {
-          persona_id: persona.id,
-          persona_name: persona.name,
-          persona_category: persona.category,
-          is_generated: persona.isGenerated || false,
-        });
-      }
       
       return true;
     } catch (error) {

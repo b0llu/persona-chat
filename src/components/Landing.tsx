@@ -1,19 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from './ui/button';
 import { MessageCircle, Sparkles, Users, Zap, LogIn } from 'lucide-react';
 
 const Landing = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const { signInWithGoogle } = useAuth();
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithGoogle();
       // Navigation will be handled by the App component via the AuthGuard
     } catch (error) {
       console.error('Error signing in:', error);

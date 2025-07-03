@@ -1,19 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from './ui/button';
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signInWithGoogle } = useAuth();
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithGoogle();
       navigate('/dashboard');
     } catch (error) {
       console.error('Error signing in:', error);

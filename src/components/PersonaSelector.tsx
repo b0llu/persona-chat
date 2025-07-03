@@ -4,6 +4,7 @@ import { Input } from './ui/input';
 import { Persona } from '../types';
 import { generatePersonas } from '../services/geminiService';
 import { personaService } from '../services/personaService';
+import { mixpanelService } from '../services/mixpanelService';
 import { useAuth } from '../hooks/useAuth';
 import { Search, Sparkles, Plus, Loader2 } from 'lucide-react';
 
@@ -129,6 +130,8 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
       const saved = await personaService.savePersona(newPersona, user?.uid);
       
       if (saved) {
+        // Track persona creation in Mixpanel
+        mixpanelService.trackPersonaAdded(newPersona, user?.uid);
         // Add to local state
         setAllPersonas(prev => {
           const updatedPersonas = [...prev, newPersona];

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase/config';
-import analyticsService from '../services/analyticsService';
+import { mixpanelService } from '../services/mixpanelService';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -21,11 +21,12 @@ export const useAuth = () => {
       setLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
       
-      // Track successful login
       if (result.user) {
-        analyticsService.trackLogin(result.user.uid, {
-          method: 'google',
-          success: true,
+        mixpanelService.trackUserLogin({
+          user_id: result.user.uid,
+          email: result.user.email || undefined,
+          display_name: result.user.displayName || undefined,
+          is_new_user: result.user.metadata.creationTime === result.user.metadata.lastSignInTime,
         });
       }
       
