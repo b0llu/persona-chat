@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import ChatMessage from './ChatMessage';
 import BouncingDots from './BouncingDots';
 import { Persona, ChatSession, User } from '../types';
+import { Textarea } from './ui/textarea';
 
 interface ChatAreaProps {
   chat: ChatSession | null;
@@ -52,7 +53,7 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
   if (!chat) return null;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       {/* Header - Hidden on mobile since we have top nav */}
       <div className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border p-4">
         <div className="flex items-center justify-between">
@@ -77,7 +78,7 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 lg:p-6 space-y-3 lg:space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 lg:p-6 space-y-3 lg:space-y-4 pb-24 lg:pb-32">
         {chat.messages.map((message, index) => {
           const isLastMessage = index === chat.messages.length - 1;
           const isStreaming = isLastMessage && message.sender === 'persona' && !isLoading && message.text.length > 0;
@@ -107,31 +108,35 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-border p-3 lg:p-6">
-        <div className="flex gap-2 lg:gap-3 items-start">
-          <div className="flex-1 relative">
-            <textarea
-              ref={textareaRef}
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder={`Message ${persona.name}...`}
-              className="w-full resize-none bg-muted border border-input rounded-lg px-3 lg:px-4 py-2 lg:py-3 text-sm lg:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent min-h-[44px] max-h-[120px] leading-5"
-              rows={1}
-              style={{ height: '44px' }}
-            />
+      {/* Floating Input */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-6 bg-gradient-to-t from-background via-background/95 to-transparent">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-card border border-border rounded-xl shadow-lg p-2 lg:p-3">
+              <div className="flex gap-2 lg:gap-3 items-end">
+                <div className="flex-1 relative">
+                  <Textarea
+                    ref={textareaRef}
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder={`Message ${persona.name}...`}
+                    className="w-full resize-none bg-transparent border-none px-3 lg:px-4 py-2 lg:py-3 text-sm lg:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[44px] max-h-[120px] leading-5"
+                    rows={1}
+                    style={{ height: '44px' }}
+                  />
+                </div>
+                <Button
+                  onClick={handleSend}
+                  disabled={!inputMessage.trim() || isLoading}
+                  variant="outline"
+                  className="h-[44px] px-4 py-3 flex-shrink-0 w-[44px] lg:w-auto"
+                  size="icon"
+                >
+                  <Send className="w-4 h-4" />
+                  <span className="hidden lg:inline lg:ml-2">Send</span>
+                </Button>
+              </div>
           </div>
-          <Button
-            onClick={handleSend}
-            disabled={!inputMessage.trim() || isLoading}
-            variant="outline"
-            className="h-[44px] lg:h-auto lg:px-4 lg:py-3 flex-shrink-0 w-[44px] lg:w-auto"
-            size="icon"
-          >
-            <Send className="w-4 h-4" />
-            <span className="hidden lg:inline lg:ml-2">Send</span>
-          </Button>
         </div>
       </div>
     </div>
