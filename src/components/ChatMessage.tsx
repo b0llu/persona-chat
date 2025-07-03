@@ -8,9 +8,10 @@ interface ChatMessageProps {
   persona: Persona;
   user: User | null;
   isStreaming?: boolean;
+  shouldStream?: boolean;
 }
 
-const ChatMessage = ({ message, persona, user, isStreaming = false }: ChatMessageProps) => {
+const ChatMessage = ({ message, persona, user, isStreaming = false, shouldStream = false }: ChatMessageProps) => {
   const isUser = message.sender === 'user';
   
   // Don't render empty persona messages (they're waiting for streaming to start)
@@ -72,6 +73,7 @@ const ChatMessage = ({ message, persona, user, isStreaming = false }: ChatMessag
             <StreamingText
               text={message.text}
               isComplete={false}
+              shouldStream={shouldStream}
               className="text-sm lg:text-sm leading-relaxed"
             />
           ) : (

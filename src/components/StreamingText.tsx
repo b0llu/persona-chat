@@ -6,12 +6,18 @@ interface StreamingTextProps {
   text: string;
   isComplete: boolean;
   className?: string;
+  shouldStream?: boolean;
 }
 
-const StreamingText = ({ text, isComplete, className = '' }: StreamingTextProps) => {
+const StreamingText = ({ text, isComplete, className = '', shouldStream = false }: StreamingTextProps) => {
   const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
+    if (!shouldStream) {
+      setDisplayedText(text);
+      return;
+    }
+
     if (text.length > displayedText.length) {
       const timer = setTimeout(() => {
         setDisplayedText(text.slice(0, displayedText.length + 1));

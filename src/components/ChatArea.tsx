@@ -17,6 +17,7 @@ interface ChatAreaProps {
 
 const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: ChatAreaProps) => {
   const [inputMessage, setInputMessage] = useState('');
+  const [isChatActive, setIsChatActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -41,6 +42,7 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
     if (!inputMessage.trim()) return;
     onSendMessage(inputMessage);
     setInputMessage('');
+    setIsChatActive(true);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -78,8 +80,8 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto pb-24 lg:pb-32">
-        <div className="max-w-4xl mx-auto p-3 lg:p-6 space-y-3 lg:space-y-4">
+      <div className="flex flex-col items-center overflow-y-auto pb-24 lg:pb-32">
+        <div className="max-w-4xl mx-3 py-3 lg:py-6 lg:mx-6 space-y-3 lg:space-y-4">
           {chat.messages.map((message, index) => {
             const isLastMessage = index === chat.messages.length - 1;
             const isStreaming = isLastMessage && message.sender === 'persona' && !isLoading && message.text.length > 0;
@@ -91,6 +93,7 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
                 persona={persona}
                 user={user}
                 isStreaming={isStreaming}
+                shouldStream={isChatActive}
               />
             );
           })}
