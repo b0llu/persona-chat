@@ -106,6 +106,22 @@ const ChatInterface = () => {
   const createNewChat = useCallback(() => {
     if (!user?.uid) return;
 
+    // Check if there's already a new chat (no persona and no user messages)
+    const existingNewChat = allChats.find(chat => 
+      !chat.persona && 
+      (chat.messages.length === 0 || 
+       chat.messages.every(msg => msg.sender === 'persona'))
+    );
+
+    if (existingNewChat) {
+      // Navigate to existing new chat instead of creating another one
+      setCurrentChat(existingNewChat);
+      setSelectedPersona(null);
+      navigate(`/chat/${existingNewChat.id}`);
+      setIsMobileSidebarOpen(false);
+      return;
+    }
+
     // Create a local chat that will be saved to Firebase only when user sends first message
     const newChat: ChatSession = {
       id: chatService.generateChatId(),
@@ -124,7 +140,7 @@ const ChatInterface = () => {
     setSelectedPersona(null);
     navigate(`/chat/${newChat.id}`);
     setIsMobileSidebarOpen(false);
-  }, [user?.uid, navigate]);
+  }, [user?.uid, navigate, allChats]);
 
   // Handle chat selection by ID from URL
   useEffect(() => {
