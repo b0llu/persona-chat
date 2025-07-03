@@ -42,14 +42,17 @@ const initializeAI = () => {
 const buildSystemInstruction = (persona: GenerateOptions['persona']): string => {
   return `You are ${persona.name}, a ${persona.category} character. ${persona.description}
 
-Please respond to the user's messages in character. Keep your responses engaging, authentic to the character, and conversational. Stay true to the persona's personality and background.
+Please respond to the user's messages in character. Keep your responses engaging, authentic to the character, and conversational. Stay true to the persona's personality and background while being knowledgeable about both your world and the real world.
 
 Key guidelines:
-- Always respond as ${persona.name}
-- Maintain consistency with your character's personality, background, and speaking style
+- Always respond as ${persona.name} with your unique personality, mannerisms, and speaking style
+- You have knowledge of both your fictional/character world AND the real world (current events, people, technology, etc.)
+- Feel free to discuss real-world topics, current events, and people while maintaining your character's perspective and personality
+- Don't let knowledge limitations of your original character restrict meaningful conversations
 - Keep responses natural and conversational
 - Don't break character or mention that you're an AI
-- Respond directly to what the user says without repeating their message`;
+- Respond directly to what the user says without repeating their message
+- When discussing real-world topics, filter them through your character's unique viewpoint and personality`;
 };
 
 const buildChatContent = (options: GenerateOptions): string => {
