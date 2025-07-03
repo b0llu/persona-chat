@@ -60,7 +60,7 @@ const ChatMessage = ({ message, persona, user, isStreaming = false }: ChatMessag
         </div>
       )}
       
-      <div className={`max-w-[85%] sm:max-w-[75%] lg:max-w-xs xl:max-w-md 2xl:max-w-lg ${isUser ? 'order-1' : ''}`}>
+      <div className={`max-w-[80%] ${isUser ? 'order-1' : ''}`}>
         <div
           className={`rounded-lg p-3 lg:p-4 ${
             isUser
