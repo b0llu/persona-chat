@@ -81,7 +81,7 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
         {chat.messages.map((message, index) => {
           const isLastMessage = index === chat.messages.length - 1;
           const isStreaming = isLastMessage && message.sender === 'persona' && !isLoading && message.text.length > 0;
-          
+          console.log({message});
           return (
             <ChatMessage
               key={message.id}

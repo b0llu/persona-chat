@@ -218,7 +218,7 @@ const Chat = () => {
           {messages.map((message, index) => {
             const isLastMessage = index === messages.length - 1;
             const isStreaming = isLastMessage && message.sender === 'persona' && !isLoading && message.text.length > 0;
-            
+
             return (
               <ChatMessage
                 key={message.id}
@@ -258,12 +258,12 @@ const Chat = () => {
               className="flex-1 resize-none bg-muted border border-input rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent min-h-[60px] max-h-[120px]"
               rows={1}
             />
-                         <Button
-               onClick={handleSendMessage}
-               disabled={!inputMessage.trim() || isLoading}
-               variant="outline"
-               className="self-end px-6"
-             >
+              <Button
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() || isLoading}
+                variant="outline"
+                className="self-end px-6"
+              >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
