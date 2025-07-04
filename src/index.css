@@ -200,6 +200,11 @@
     overflow: hidden;
   }
 
+  /* 3D perspective for flip animations */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
   /* Word breaking utilities */
   .break-words {
     word-wrap: break-word;
