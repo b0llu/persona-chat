@@ -94,7 +94,7 @@ const Landing = () => {
             className="max-w-4xl mx-auto w-full"
           >
             <motion.h1 
-              className="text-6xl md:text-8xl font-bold text-foreground mb-8"
+              className="text-6xl md:text-8xl font-bold text-foreground mb-4"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
