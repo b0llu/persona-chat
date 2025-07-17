@@ -169,7 +169,7 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-          {filteredPersonas.map((persona, index) => (
+          {filteredPersonas.map((persona) => (
             <div
               key={persona.id}
               onClick={() => onPersonaSelect(persona)}
@@ -179,7 +179,7 @@ const PersonaSelector = ({ onPersonaSelect }: PersonaSelectorProps) => {
               <div 
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{
-                  backgroundImage: `url(https://picsum.photos/1000?random=${index + 1})`
+                  backgroundImage: `url(${persona.avatar})`
                 }}
               />
               

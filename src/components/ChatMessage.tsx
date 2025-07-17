@@ -56,9 +56,17 @@ const ChatMessage = ({ message, persona, user, isStreaming = false, shouldStream
   return (
     <div className={`flex gap-2 lg:gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
       {!isUser && (
-        <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs lg:text-sm flex-shrink-0 mt-1">
-          {persona.name.charAt(0).toUpperCase()}
-        </div>
+        persona.avatar ? (
+          <img
+            src={persona.avatar}
+            alt={persona.name}
+            className="w-6 h-6 lg:w-8 lg:h-8 rounded-full object-cover flex-shrink-0 mt-1"
+          />
+        ) : (
+          <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs lg:text-sm flex-shrink-0 mt-1">
+            {persona.name.charAt(0).toUpperCase()}
+          </div>
+        )
       )}
       
       <div className={`max-w-[80%] ${isUser ? 'order-1' : ''}`}>
@@ -93,9 +101,17 @@ const ChatMessage = ({ message, persona, user, isStreaming = false, shouldStream
       </div>
       
       {isUser && (
-        <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-semibold text-xs lg:text-sm flex-shrink-0 mt-1">
-          {(user?.displayName || 'You').charAt(0).toUpperCase()}
-        </div>
+        user && user.photoURL ? (
+          <img
+            src={user.photoURL}
+            alt={user.displayName || 'User'}
+            className="w-6 h-6 lg:w-8 lg:h-8 rounded-full object-cover flex-shrink-0 mt-1"
+          />
+        ) : (
+          <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-semibold text-xs lg:text-sm flex-shrink-0 mt-1">
+            {(user?.displayName || 'You').charAt(0).toUpperCase()}
+          </div>
+        )
       )}
     </div>
   );

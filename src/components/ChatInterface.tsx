@@ -622,9 +622,17 @@ const ChatInterface = () => {
           <div className="flex items-center gap-2 min-w-0 flex-1 mx-3">
             {selectedPersona ? (
               <>
-                <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs flex-shrink-0">
-                  {selectedPersona.name.charAt(0).toUpperCase()}
-                </div>
+                {selectedPersona.avatar ? (
+                  <img
+                    src={selectedPersona.avatar}
+                    alt={selectedPersona.name}
+                    className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs flex-shrink-0">
+                    {selectedPersona.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <span className="text-sm font-medium text-foreground truncate">
                   {selectedPersona.name}
                 </span>

@@ -19,6 +19,7 @@
     "@types/lodash": "^4.17.20",
     "@types/mixpanel-browser": "^2.60.0",
     "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^11.10.0",

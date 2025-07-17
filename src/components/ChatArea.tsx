@@ -53,9 +53,17 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
       <div className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg">
-              {persona.name.charAt(0).toUpperCase()}
-            </div>
+            {persona.avatar ? (
+              <img
+                src={persona.avatar}
+                alt={persona.name}
+                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg flex-shrink-0">
+                {persona.name.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div>
               <h1 className="text-lg font-semibold text-foreground">{persona.name}</h1>
               <p className="text-sm text-muted-foreground capitalize">{persona.category}</p>
@@ -93,9 +101,17 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
           
           {isLoading && (
             <div className="flex items-center gap-3 p-4">
-              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
-                {persona.name.charAt(0).toUpperCase()}
-              </div>
+              {persona.avatar ? (
+                <img
+                  src={persona.avatar}
+                  alt={persona.name}
+                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                  {persona.name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="bg-card rounded-lg p-4 border border-border">
                 <BouncingDots />
               </div>

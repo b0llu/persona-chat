@@ -8,6 +8,7 @@ import { personaService } from '../services/personaService';
 import { mixpanelService } from '../services/mixpanelService';
 import { useAuth } from '../hooks/useAuth';
 import { Search, Sparkles, Plus, Loader2 } from 'lucide-react';
+import { imageService } from '../services/imageService';
 
 interface PersonaSearchModalProps {
   isOpen: boolean;
@@ -34,6 +35,8 @@ const PersonaSearchModal = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isCreatingPersona, setIsCreatingPersona] = useState(false);
+  const [creationError, setCreationError] = useState<string | null>(null);
 
   // Generate AI personas function
   const generateAiPersonas = useCallback(async (term: string) => {
@@ -72,12 +75,27 @@ const PersonaSearchModal = ({
   };
 
   const handleAiPersonaSelect = async (aiPersona: { name: string; description: string; category: string }) => {
+    setIsCreatingPersona(true);
+    setCreationError(null);
     try {
+      // Step 1: Generate image prompt
+      const prompt = `A portrait of ${aiPersona.name}, ${aiPersona.description}, in a modern digital art style, must be a portrait, no text, no watermark, centered, high quality`;
+      let avatarUrl = '';
+      try {
+        // Step 2: Generate image
+        const imageDataUrl = await imageService.generateImage({ prompt });
+        // Step 3: Upload to Cloudinary
+        avatarUrl = await imageService.uploadToCloudinary(imageDataUrl);
+      } catch (imgErr) {
+        console.error('Persona image generation/upload failed:', imgErr);
+        // Fallback: leave avatarUrl as empty string
+      }
+
       const newPersona: Persona = {
         id: `ai-${Date.now()}-${aiPersona.name.toLowerCase().replace(/\s+/g, '-')}`,
         name: aiPersona.name,
         description: aiPersona.description,
-        avatar: '',
+        avatar: avatarUrl,
         category: aiPersona.category as Persona['category']
       };
 
@@ -100,10 +118,14 @@ const PersonaSearchModal = ({
         // Select the persona
         onPersonaSelect(newPersona);
       } else {
+        setCreationError('Failed to save persona to Firebase');
         console.error('Failed to save persona to Firebase');
       }
     } catch (error) {
+      setCreationError('Error handling AI persona selection');
       console.error('Error handling AI persona selection:', error);
+    } finally {
+      setIsCreatingPersona(false);
     }
   };
 
@@ -170,6 +192,20 @@ const PersonaSearchModal = ({
 
           {/* Results */}
           <div className="max-h-[400px] overflow-y-auto space-y-4">
+            {isCreatingPersona && (
+              <div className="text-center py-8">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span>Creating persona...</span>
+                </div>
+              </div>
+            )}
+            {creationError && (
+              <div className="text-center py-4">
+                <p className="text-sm text-destructive">{creationError}</p>
+              </div>
+            )}
+
             {isGenerating && (
               <div className="text-center py-8">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
@@ -329,6 +365,12 @@ const PersonaSearchModal = ({
           </div>
         </div>
       </DialogContent>
+      {/* Disclaimer about persona images */}
+      <div className="px-6 pb-4 pt-2 text-xs text-muted-foreground text-center">
+        <span className="inline-block bg-muted/60 rounded px-2 py-1">
+          Persona images are AI-generated and for reference only. They do not represent real people or characters.
+        </span>
+      </div>
     </Dialog>
   );
 };
