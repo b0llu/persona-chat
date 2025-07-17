@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Plus, MessageCircle, Sparkles, Users } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import PersonaSelector from './PersonaSelector';
@@ -13,6 +13,7 @@ import * as chatService from '../services/chatService';
 
 const ChatInterface = () => {
   const { chatId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [chatSessions, setChatSessions] = useState<FirebaseChatMetadata[]>([]);
@@ -23,6 +24,9 @@ const ChatInterface = () => {
   const [isLoadingChats, setIsLoadingChats] = useState(true);
   const hasCreatedInitialChat = useRef(false);
   const [localChats, setLocalChats] = useState<Map<string, ChatSession>>(new Map());
+
+  // Detect if this is a temporary chat route
+  const isTemporaryChat = location.pathname.startsWith('/temp-chat');
 
   // Load user's chat list from Firebase on component mount
   useEffect(() => {
@@ -88,13 +92,14 @@ const ChatInterface = () => {
         userId: metadata.userId,
         messages: [], // Metadata doesn't include messages
         createdAt: new Date(metadata.createdAt),
-        updatedAt: new Date(metadata.updatedAt)
+        updatedAt: new Date(metadata.updatedAt),
+        temporary: false,
       });
     });
     
     // Add local chats that aren't in Firebase yet
     for (const [chatId, localChat] of localChats) {
-      if (!chatSessions.find(chat => chat.id === chatId)) {
+      if (!chatSessions.find(chat => chat.id === chatId) && !localChat.temporary) {
         combined.unshift(localChat); // Add to beginning (newest first)
       }
     }
@@ -244,31 +249,34 @@ const ChatInterface = () => {
     setCurrentChat(updatedChat);
     setIsLoading(true);
 
+    let chatExists = false;
     // Check if this chat exists in Firebase - if not, create it (lazy creation)
-    const chatExists = await chatService.chatExistsInFirebase(currentChat.id, user.uid);
-    if (!chatExists) {
-      try {
-        await chatService.createChat({
-          id: updatedChat.id,
-          title: updatedChat.title,
-          persona: updatedChat.persona,
-          userId: updatedChat.userId,
-          messages: updatedMessages, // Include the user message
-          createdAt: updatedChat.createdAt,
-          updatedAt: updatedChat.updatedAt,
-        });
-        
-        // Track chat creation in Mixpanel
-        mixpanelService.trackChatCreated({
-          chat_id: updatedChat.id,
-          persona_name: updatedChat.persona?.name,
-          persona_category: updatedChat.persona?.category,
-          user_id: updatedChat.userId,
-        });
-        
-      } catch (error) {
-        console.error('Error creating chat in Firebase:', error);
-        // Continue with local state even if Firebase fails
+    if (!isTemporaryChat) {
+      chatExists = await chatService.chatExistsInFirebase(currentChat.id, user.uid);
+      if (!chatExists) {
+        try {
+          await chatService.createChat({
+            id: updatedChat.id,
+            title: updatedChat.title,
+            persona: updatedChat.persona,
+            userId: updatedChat.userId,
+            messages: updatedMessages, // Include the user message
+            createdAt: updatedChat.createdAt,
+            updatedAt: updatedChat.updatedAt,
+          });
+          
+          // Track chat creation in Mixpanel
+          mixpanelService.trackChatCreated({
+            chat_id: updatedChat.id,
+            persona_name: updatedChat.persona?.name,
+            persona_category: updatedChat.persona?.category,
+            user_id: updatedChat.userId,
+          });
+          
+        } catch (error) {
+          console.error('Error creating chat in Firebase:', error);
+          // Continue with local state even if Firebase fails
+        }
       }
     }
 
@@ -333,22 +341,24 @@ const ChatInterface = () => {
       });
 
       // Save the final chat to Firebase after streaming is complete
-      const finalMessages = messagesWithStreaming.map(msg => 
-        msg.id === personaMessageId 
-          ? { ...msg, text: accumulatedText }
-          : msg
-      );
-      
-      const finalChat: ChatSession = {
-        ...chatWithStreaming,
-        messages: finalMessages,
-        updatedAt: new Date()
-      };
+      if (!isTemporaryChat) {
+        const finalMessages = messagesWithStreaming.map(msg => 
+          msg.id === personaMessageId 
+            ? { ...msg, text: accumulatedText }
+            : msg
+        );
+        
+        const finalChat: ChatSession = {
+          ...chatWithStreaming,
+          messages: finalMessages,
+          updatedAt: new Date()
+        };
 
-      await chatService.updateChat(finalChat);
+        await chatService.updateChat(finalChat);
 
-      // Don't immediately remove from local chats - let the Firebase listener handle it
-      // This prevents the sidebar from briefly showing "No chats yet"
+        // Don't immediately remove from local chats - let the Firebase listener handle it
+        // This prevents the sidebar from briefly showing "No chats yet"
+      }
 
     } catch (error) {
       console.error('Error generating AI response:', error);
@@ -448,6 +458,28 @@ const ChatInterface = () => {
       console.error('Error deleting chat:', error);
     }
       };
+
+  // Handler to toggle temporary chat state before user input
+  const handleToggleTemporaryChat = useCallback((toTemporary: boolean) => {
+    if (!currentChat) return;
+    if (
+      currentChat.persona &&
+      currentChat.messages.length === 1 &&
+      currentChat.messages[0].sender === 'persona'
+    ) {
+      const updatedChat: ChatSession = {
+        ...currentChat,
+        temporary: toTemporary,
+      };
+      setLocalChats(prev => new Map(prev).set(updatedChat.id, updatedChat));
+      setCurrentChat(updatedChat);
+      if (toTemporary) {
+        navigate(`/temp-chat/${updatedChat.id}`);
+      } else {
+        navigate(`/chat/${updatedChat.id}`);
+      }
+    }
+  }, [currentChat, navigate]);
 
   // Show loading state while chats are being loaded
   if (isLoadingChats) {
@@ -707,6 +739,8 @@ const ChatInterface = () => {
             isLoading={isLoading}
             onSendMessage={handleSendMessage}
             onNewChat={createNewChat}
+            isTemporaryChat={isTemporaryChat}
+            onToggleTemporaryChat={handleToggleTemporaryChat}
           />
         )}
       </div>

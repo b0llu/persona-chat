@@ -21,6 +21,7 @@ export interface ChatSession {
   createdAt: Date;
   updatedAt: Date;
   userId: string;
+  temporary?: boolean; // Indicates if this is a temporary chat
 }
 
 export interface FirebaseChatMetadata {

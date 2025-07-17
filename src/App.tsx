@@ -46,6 +46,14 @@ function AppContent() {
           } 
         />
         <Route 
+          path="/temp-chat/:chatId" 
+          element={
+            <AuthGuard>
+              <ChatInterface />
+            </AuthGuard>
+          } 
+        />
+        <Route 
           path="*" 
           element={<Navigate to={user ? "/dashboard" : "/"} replace />} 
         />

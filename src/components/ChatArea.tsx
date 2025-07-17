@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Send } from 'lucide-react';
+import { MessageCircleDashed, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import ChatMessage from './ChatMessage';
 import BouncingDots from './BouncingDots';
@@ -13,9 +14,11 @@ interface ChatAreaProps {
   isLoading: boolean;
   onSendMessage: (text: string) => void;
   onNewChat: () => void;
+  isTemporaryChat?: boolean;
+  onToggleTemporaryChat?: (toTemporary: boolean) => void;
 }
 
-const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: ChatAreaProps) => {
+const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat, isTemporaryChat, onToggleTemporaryChat }: ChatAreaProps) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isChatActive, setIsChatActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -52,7 +55,8 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
       {/* Header - Hidden on mobile since we have top nav */}
       <div className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          {/* Left: Persona info */}
+          <div className="flex items-center gap-3 min-w-0">
             {persona.avatar ? (
               <img
                 src={persona.avatar}
@@ -64,19 +68,59 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat }: 
                 {persona.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">{persona.name}</h1>
-              <p className="text-sm text-muted-foreground capitalize">{persona.category}</p>
+            <div className="min-w-0">
+              <h1 className="text-lg font-semibold text-foreground truncate">{persona.name}</h1>
+              <p className="text-sm text-muted-foreground capitalize truncate">{persona.category}</p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            onClick={onNewChat}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Chat
-          </Button>
+          {/* Center: Temporary Chat label if chat is temporary */}
+          <div className="flex-1 flex justify-center">
+            {isTemporaryChat && (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-2">
+                  <MessageCircleDashed className="w-5 h-5 text-foreground" />
+                  <span className="text-base font-semibold text-foreground">Temporary Chat</span>
+                  <span className="relative group">
+                    <Info className="w-4 h-4 text-foreground/70 cursor-pointer" />
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 z-50 hidden group-hover:block group-focus:block bg-black text-white text-sm font-semibold rounded-xl px-4 py-2 whitespace-pre-line shadow-lg min-w-max max-w-xs text-center" style={{top: '100%'}}>
+                      Temporary Chats won't appear in your history,<br />and we won't remember anything you talk about.
+                    </div>
+                  </span>
+                </span>
+              </div>
+            )}
+          </div>
+          {/* Right side: toggle and New Chat button */}
+          <div className="flex items-center gap-2">
+            {/* Show toggle for temporary chat if eligible */}
+            {onToggleTemporaryChat && chat && chat.persona && chat.messages.length === 1 && chat.messages[0].sender === 'persona' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onToggleTemporaryChat(!isTemporaryChat)}
+                className="flex items-center justify-center relative rounded-full"
+                title={isTemporaryChat ? 'Switch to Normal Chat' : 'Switch to Temporary Chat'}
+              >
+                <MessageCircleDashed className="w-10 h-10 text-foreground" />
+                {isTemporaryChat && (
+                  <svg
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-100"
+                    width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M5 9.5L8 12.5L13 7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="!text-foreground"/>
+                  </svg>
+                )}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={onNewChat}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Chat
+            </Button>
+          </div>
         </div>
       </div>
 
