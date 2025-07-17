@@ -6,7 +6,7 @@ import AuthButton from './AuthButton';
 import { ThemeToggle } from './ThemeToggle';
 import { ChatSession } from '../types';
 import { useAuth } from '@/hooks/useAuth';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+import { Tooltip } from './ui/tooltip';
 
 // Custom hook to blur active element on tab visibility change
 function useTooltipVisibilityFix() {
@@ -98,20 +98,9 @@ const Sidebar = ({
             >
               Persona Chat
             </button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCollapsed((c) => !c)}
-                  className={`ml-auto ${collapsed ? '' : 'mr-2'}`}
-                  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                >
-                  <PanelLeft className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side={collapsed ? "right" : "bottom"} className={`select-none ${collapsed ? 'ml-1' : 'mt-1'}`}>
-                {collapsed ? (
+            <div className="flex items-center gap-2">
+              <Tooltip
+                content={collapsed ? (
                   <span className="flex items-center gap-1">
                     <span>Open sidebar</span>
                   </span>
@@ -120,9 +109,20 @@ const Sidebar = ({
                     <span>Close sidebar</span>
                   </span>
                 )}
-              </TooltipContent>
-            </Tooltip>
-            {!collapsed && <ThemeToggle />}
+                side={collapsed ? 'right' : 'bottom'}
+              >
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCollapsed((c) => !c)}
+                  className={`ml-auto`}
+                  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  <PanelLeft className="w-4 h-4" />
+                </Button>
+              </Tooltip>
+              {!collapsed && <ThemeToggle />}
+            </div>
           </div>
           {!collapsed && (
             <Button
