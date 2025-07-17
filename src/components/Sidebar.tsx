@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, PanelLeft } from 'lucide-react';
 import { Button } from './ui/button';
@@ -7,6 +7,21 @@ import { ThemeToggle } from './ThemeToggle';
 import { ChatSession } from '../types';
 import { useAuth } from '@/hooks/useAuth';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+
+// Custom hook to blur active element on tab visibility change
+function useTooltipVisibilityFix() {
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+}
 
 interface SidebarProps {
   chatSessions: ChatSession[];
@@ -25,6 +40,7 @@ const Sidebar = ({
   onDeleteChat, 
   isMobile = false
 }: SidebarProps) => {
+  useTooltipVisibilityFix();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
