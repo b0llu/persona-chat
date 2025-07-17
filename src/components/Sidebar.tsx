@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, PanelLeft } from 'lucide-react';
 import { Button } from './ui/button';
 import AuthButton from './AuthButton';
 import { ThemeToggle } from './ThemeToggle';
@@ -88,7 +88,7 @@ const Sidebar = ({
               className={`ml-auto ${collapsed ? '' : 'mr-2'}`}
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              <PanelLeft className="w-4 h-4" />
             </Button>
             {!collapsed && <ThemeToggle />}
           </div>

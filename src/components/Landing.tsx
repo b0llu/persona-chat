@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import { ThemeToggle } from './ThemeToggle';
 import { Button } from './ui/button';
 import { MessageCircle, Sparkles, Users, Zap, LogIn } from 'lucide-react';
 
@@ -52,10 +51,6 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Theme Toggle */}
-      <div className="absolute top-6 right-6 z-50">
-        <ThemeToggle />
-      </div>
 
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
