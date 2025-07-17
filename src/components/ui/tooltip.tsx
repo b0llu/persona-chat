@@ -1,89 +1,58 @@
-import React, { useState, useRef } from 'react';
+import * as React from "react"
+import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
-export interface TooltipProps {
-  content: React.ReactNode;
-  children: React.ReactElement;
-  side?: 'top' | 'right' | 'bottom' | 'left';
-  offset?: number;
-  className?: string;
+import { cn } from "@/lib/utils"
+
+function TooltipProvider({
+  delayDuration = 0,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
+  return (
+    <TooltipPrimitive.Provider
+      data-slot="tooltip-provider"
+      delayDuration={delayDuration}
+      {...props}
+    />
+  )
 }
 
-export const Tooltip: React.FC<TooltipProps> = ({
-  content,
-  children,
-  side = 'top',
-  offset = 8,
-  className = '',
-}) => {
-  const [visible, setVisible] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
-
-  const showTooltip = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      let top = 0, left = 0;
-      switch (side) {
-        case 'top':
-          top = rect.top - offset;
-          left = rect.left + rect.width / 2;
-          break;
-        case 'bottom':
-          top = rect.bottom + offset;
-          left = rect.left + rect.width / 2;
-          break;
-        case 'left':
-          top = rect.top + rect.height / 2;
-          left = rect.left - offset;
-          break;
-        case 'right':
-          top = rect.top + rect.height / 2;
-          left = rect.right + offset;
-          break;
-      }
-      setCoords({ top, left });
-    }
-    setVisible(true);
-  };
-
-  const hideTooltip = () => {
-    setVisible(false);
-  };
-
+function Tooltip({
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
   return (
-    <div
-      ref={triggerRef}
-      onMouseEnter={showTooltip}
-      onMouseLeave={hideTooltip}
-      onFocus={showTooltip}
-      onBlur={hideTooltip}
-      style={{ display: 'inline-block', position: 'relative' }}
-    >
-      {children}
-      {visible && coords && (
-        <div
-          className={`pointer-events-none fixed z-50 transition-opacity duration-150 opacity-100 ${className}`}
-          style={{
-            top: side === 'top' || side === 'bottom' ? coords.top : coords.top,
-            left: side === 'top' || side === 'bottom' ? coords.left : coords.left,
-            transform:
-              side === 'top' ? 'translate(-50%, -100%)' :
-              side === 'bottom' ? 'translate(-50%, 0)' :
-              side === 'left' ? 'translate(-100%, -50%)' :
-              'translate(0, -50%)',
-            background: 'black',
-            color: 'white',
-            borderRadius: '0.5rem',
-            padding: '0.375rem 0.75rem',
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-          }}
-        >
-          {content}
-        </div>
-      )}
-    </div>
-  );
-};
+    <TooltipProvider>
+      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+    </TooltipProvider>
+  )
+}
+
+function TooltipTrigger({
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+}
+
+function TooltipContent({
+  className,
+  sideOffset = 0,
+  children,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  return (
+    <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Content
+        data-slot="tooltip-content"
+        sideOffset={sideOffset}
+        className={cn(
+          "bg-black text-white rounded-lg px-3 py-2 text-xs font-medium z-50 select-none",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </TooltipPrimitive.Content>
+    </TooltipPrimitive.Portal>
+  )
+}
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }

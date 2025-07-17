@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import AuthGuard from './components/AuthGuard';
 import { ThemeProvider } from './context/ThemeContext';
 import { useAuth } from './hooks/useAuth';
+import { TooltipProvider } from './components/ui/tooltip';
 
 // Lazy load components
 const Landing = lazy(() => import('./components/Landing'));
@@ -57,9 +58,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider defaultTheme="dark">
-      <Router>
-        <AppContent />
-      </Router>
+      <TooltipProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </TooltipProvider>
     </ThemeProvider>
   );
 }
