@@ -7,6 +7,7 @@ import { useAuth } from './hooks/useAuth';
 // Lazy load components
 const Landing = lazy(() => import('./components/Landing'));
 const ChatInterface = lazy(() => import('./components/ChatInterface'));
+const Pricing = lazy(() => import('./components/Pricing'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -52,6 +53,10 @@ function AppContent() {
               <ChatInterface />
             </AuthGuard>
           } 
+        />
+        <Route 
+          path="/pricing" 
+          element={<Pricing />} 
         />
         <Route 
           path="*" 
