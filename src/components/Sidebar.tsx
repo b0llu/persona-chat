@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, PanelLeft } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import AuthButton from './AuthButton';
 import { ThemeToggle } from './ThemeToggle';
 import { ChatSession } from '../types';
 import { useAuth } from '@/hooks/useAuth';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 
 interface SidebarProps {
   chatSessions: ChatSession[];
@@ -82,30 +81,15 @@ const Sidebar = ({
             >
               Persona Chat
             </button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCollapsed((c) => !c)}
-                  className={`ml-auto ${collapsed ? '' : 'mr-2'}`}
-                  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                >
-                  <PanelLeft className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side={collapsed ? "right" : "bottom"} className={`select-none ${collapsed ? 'ml-1' : 'mt-1'}`}>
-                {collapsed ? (
-                  <span className="flex items-center gap-1">
-                    <span>Open sidebar</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1">
-                    <span>Close sidebar</span>
-                  </span>
-                )}
-              </TooltipContent>
-            </Tooltip>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setCollapsed((c) => !c)}
+              className={`ml-auto ${collapsed ? '' : 'mr-2'}`}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
             {!collapsed && <ThemeToggle />}
           </div>
           {!collapsed && (
