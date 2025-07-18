@@ -82,10 +82,10 @@ const ChatMessage = ({ message, persona, user, isStreaming = false, shouldStream
               text={message.text}
               isComplete={false}
               shouldStream={shouldStream}
-              className="text-sm lg:text-sm leading-relaxed"
+              className="text-base lg:text-base leading-loose"
             />
           ) : (
-            <div className="text-sm lg:text-sm leading-relaxed prose prose-sm max-w-none prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:text-current prose-blockquote:text-current prose-li:text-current">
+            <div className="text-base lg:text-base leading-loose prose prose-sm max-w-none prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:text-current prose-blockquote:text-current prose-li:text-current">
               <Markdown components={markdownComponents}>{message.text}</Markdown>
             </div>
           )}
