@@ -92,7 +92,7 @@ export const generateResponse = async (options: GenerateOptions): Promise<string
     const content = buildChatContent(options);
     
     const response = await ai!.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite-preview-06-17",
       contents: content,
       config: {
         systemInstruction: systemInstruction
@@ -127,7 +127,7 @@ export const generateStreamResponse = async (
     const content = buildChatContent(options);
     
     const response = await ai!.models.generateContentStream({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite-preview-06-17",
       contents: content,
       config: {
         systemInstruction: systemInstruction
@@ -202,7 +202,7 @@ Example format:
 Only return the JSON array, no additional text.`;
 
     const response = await ai!.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite-preview-06-17",
       contents: prompt,
     });
 
