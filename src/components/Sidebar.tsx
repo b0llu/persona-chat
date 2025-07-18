@@ -139,7 +139,7 @@ const Sidebar = ({
             return order.map((period, idx) =>
               grouped[period].length > 0 ? (
                 <div key={period} className={`mb-4${idx !== 0 ? ' pt-4 border-t border-border' : ''}`}>
-                  <div className={`text-xs font-semibold text-muted-foreground px-2 uppercase tracking-wide py-2${idx !== 0 ? ' mt-2' : ''} mb-2`}>{period}</div>
+                  <div className={`text-xs font-semibold text-muted-foreground px-2 uppercase tracking-wide py-2 mb-2`}>{period}</div>
                   {grouped[period].map((chat) => (
                     <div
                       key={chat.id}
