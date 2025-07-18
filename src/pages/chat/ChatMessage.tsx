@@ -1,4 +1,4 @@
-import { Message, Persona, User } from '../types';
+import { Message, Persona, User } from '../../types';
 import StreamingText from './StreamingText';
 import Markdown from 'react-markdown';
 import { ComponentProps } from 'react';

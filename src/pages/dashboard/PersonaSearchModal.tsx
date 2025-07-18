@@ -1,14 +1,14 @@
 import { useState, useCallback } from 'react';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
-import { Persona } from '../types';
-import { generatePersonas } from '../services/geminiService';
-import { personaService } from '../services/personaService';
-import { mixpanelService } from '../services/mixpanelService';
-import { useAuth } from '../hooks/useAuth';
+import { Button } from '../../components/ui/button';
+import { Textarea } from '../../components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
+import { Persona } from '../../types';
+import { generatePersonas } from '../../services/geminiService';
+import { personaService } from '../../services/personaService';
+import { mixpanelService } from '../../services/mixpanelService';
+import { useAuth } from '../../hooks/useAuth';
 import { Search, Sparkles, Plus, Loader2 } from 'lucide-react';
-import { imageService } from '../services/imageService';
+import { imageService } from '../../services/imageService';
 
 interface PersonaSearchModalProps {
   isOpen: boolean;

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, PanelLeft } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '../../components/ui/button';
 import AuthButton from './AuthButton';
 import { ThemeToggle } from './ThemeToggle';
-import { ChatSession } from '../types';
-import { useAuth } from '@/hooks/useAuth';
+import { ChatSession } from '../../types';
+import { useAuth } from '../../hooks/useAuth';
 
 interface SidebarProps {
   chatSessions: ChatSession[];

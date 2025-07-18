@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../hooks/useAuth';
-import { Button } from './ui/button';
+import { useAuth } from '../../hooks/useAuth';
+import { Button } from '../../components/ui/button';
 import { MessageCircle, Sparkles, Users, Zap, LogIn } from 'lucide-react';
 
 const Landing = () => {

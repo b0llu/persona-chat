@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Plus, MessageCircle, Sparkles, Users } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import PersonaSelector from './PersonaSelector';
 import Sidebar from './Sidebar';
-import ChatArea from './ChatArea';
-import { Button } from './ui/button';
-import { Message, Persona, ChatSession, FirebaseChatMetadata } from '../types';
-import geminiService from '../services/geminiService';
-import { mixpanelService } from '../services/mixpanelService';
-import * as chatService from '../services/chatService';
+import ChatArea from '../chat/ChatArea';
+import { Button } from '../../components/ui/button';
+import { Message, Persona, ChatSession, FirebaseChatMetadata } from '../../types';
+import geminiService from '../../services/geminiService';
+import { mixpanelService } from '../../services/mixpanelService';
+import * as chatService from '../../services/chatService';
 
 const ChatInterface = () => {
   const { chatId } = useParams();

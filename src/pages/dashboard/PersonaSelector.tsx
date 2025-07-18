@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Persona } from '../types';
-import { personaService } from '../services/personaService';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Persona } from '../../types';
+import { personaService } from '../../services/personaService';
 import { Plus, Loader2, Search } from 'lucide-react';
 import PersonaSearchModal from './PersonaSearchModal';
 import {
@@ -11,7 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './ui/select';
+} from '../../components/ui/select';
 
 interface PersonaSelectorProps {
   onPersonaSelect: (persona: Persona) => void;

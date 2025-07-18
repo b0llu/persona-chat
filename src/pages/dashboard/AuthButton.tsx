@@ -1,6 +1,6 @@
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../components/ui/button';
 
 const AuthButton = () => {
   const { user, loading, signInWithGoogle, signOut } = useAuth();

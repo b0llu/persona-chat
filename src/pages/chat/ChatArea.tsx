@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Send } from 'lucide-react';
 import { MessageCircleDashed, Info } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '../../components/ui/button';
 import ChatMessage from './ChatMessage';
 import BouncingDots from './BouncingDots';
-import { Persona, ChatSession, User } from '../types';
-import { Textarea } from './ui/textarea';
+import { Persona, ChatSession, User } from '../../types';
+import { Textarea } from '../../components/ui/textarea';
 
 interface ChatAreaProps {
   chat: ChatSession | null;

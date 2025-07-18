@@ -5,9 +5,10 @@ import { ThemeProvider } from './context/ThemeContext';
 import { useAuth } from './hooks/useAuth';
 
 // Lazy load components
-const Landing = lazy(() => import('./components/Landing'));
-const ChatInterface = lazy(() => import('./components/ChatInterface'));
-const Pricing = lazy(() => import('./components/Pricing'));
+const Landing = lazy(() => import('./pages/landing'));
+const Dashboard = lazy(() => import('./pages/dashboard'));
+const ChatInterface = lazy(() => import('./pages/chat'));
+const Pricing = lazy(() => import('./pages/pricing'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -34,7 +35,7 @@ function AppContent() {
           path="/dashboard" 
           element={
             <AuthGuard>
-              <ChatInterface />
+              <Dashboard />
             </AuthGuard>
           } 
         />
