@@ -21,7 +21,7 @@ const StreamingText = ({ text, isComplete, className = '', shouldStream = false 
     if (text.length > displayedText.length) {
       const timer = setTimeout(() => {
         setDisplayedText(text.slice(0, displayedText.length + 1));
-      }, 15);
+      }, 5);
       return () => clearTimeout(timer);
     }
   }, [text, displayedText.length]);
