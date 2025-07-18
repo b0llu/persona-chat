@@ -93,6 +93,17 @@ export const mixpanelService = {
             console.error('Error tracking user login:', error);
         }
     },
+
+    // Track when a temporary chat is first used (first message sent)
+    trackTempChatUsed: () => {
+        if (!isMixpanelReady()) return;
+        
+        try {
+            mixpanel.track('Temporary Chat Created');
+        } catch (error) {
+            console.error('Error tracking temporary chat used:', error);
+        }
+    },
 };
 
 export default mixpanelService;

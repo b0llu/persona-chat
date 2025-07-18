@@ -231,6 +231,11 @@ const ChatInterface = () => {
   const handleSendMessage = async (text: string) => {
     if (!currentChat || !selectedPersona || !text.trim() || !user?.uid) return;
 
+    // Track temporary chat usage when user sends first message
+    if (isTemporaryChat && currentChat.messages.length === 1 && currentChat.messages[0].sender === 'persona') {
+      mixpanelService.trackTempChatUsed();
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text,
