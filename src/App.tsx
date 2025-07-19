@@ -7,7 +7,7 @@ import { useAuth } from './hooks/useAuth';
 // Lazy load components
 const Landing = lazy(() => import('./pages/landing'));
 const Dashboard = lazy(() => import('./pages/dashboard'));
-const ChatInterface = lazy(() => import('./pages/chat'));
+const ChatInterface = lazy(() => import('./pages/dashboard'));
 const Pricing = lazy(() => import('./pages/pricing'));
 
 // Loading component

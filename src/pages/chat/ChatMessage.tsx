@@ -71,7 +71,7 @@ const ChatMessage = ({ message, persona, user, isStreaming = false, shouldStream
       
       <div className={`max-w-[80%] ${isUser ? 'order-1' : ''}`}>
         <div
-          className={`rounded-lg p-3 lg:p-4 ${
+          className={`rounded-lg p-3 lg:p-4 text-left ${
             isUser
               ? 'bg-primary text-primary-foreground'
               : 'bg-card text-card-foreground border border-border'
@@ -82,10 +82,10 @@ const ChatMessage = ({ message, persona, user, isStreaming = false, shouldStream
               text={message.text}
               isComplete={false}
               shouldStream={shouldStream}
-              className="text-base lg:text-base leading-loose"
+              className="text-base lg:text-base leading-loose text-left"
             />
           ) : (
-            <div className="text-base lg:text-base leading-loose prose prose-sm max-w-none prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:text-current prose-blockquote:text-current prose-li:text-current">
+            <div className="text-base lg:text-base leading-loose text-left prose prose-sm max-w-none prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:text-current prose-blockquote:text-current prose-li:text-current">
               <Markdown components={markdownComponents}>{message.text}</Markdown>
             </div>
           )}
