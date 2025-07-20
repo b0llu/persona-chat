@@ -4,7 +4,8 @@ import {
   getDocs, 
   setDoc, 
   query, 
-  orderBy 
+  orderBy,
+  updateDoc
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Persona } from '../types';
@@ -47,7 +48,7 @@ export const personaService = {
         description: persona.description,
         avatar: persona.avatar,
         category: persona.category,
-        createdBy: userId,
+        createdBy: userId || 'unknown',
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -55,6 +56,22 @@ export const personaService = {
       return true;
     } catch (error) {
       console.error('Error saving persona to Firebase:', error);
+      return false;
+    }
+  },
+
+  // Update persona ownership when user logs in
+  async updatePersonaOwnership(personaId: string, userId: string): Promise<boolean> {
+    try {
+      const personaRef = doc(db, PERSONAS_COLLECTION, personaId);
+      await updateDoc(personaRef, {
+        createdBy: userId,
+        updatedAt: new Date()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating persona ownership:', error);
       return false;
     }
   },

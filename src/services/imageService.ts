@@ -77,9 +77,10 @@ export const generateImage = async (options: ImageGenerateOptions): Promise<stri
 /**
  * Uploads a base64 image (data URL) to Cloudinary and returns the image URL.
  * @param dataUrl The image as a data URL (e.g., 'data:image/png;base64,...')
+ * @param customName Optional custom name for the image (will be used as public_id)
  * @returns The Cloudinary image URL
  */
-export const uploadToCloudinary = async (dataUrl: string): Promise<string> => {
+export const uploadToCloudinary = async (dataUrl: string, customName?: string): Promise<string> => {
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
   if (!uploadPreset || !cloudName) {
@@ -92,8 +93,18 @@ export const uploadToCloudinary = async (dataUrl: string): Promise<string> => {
 
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
   const formData = new FormData();
-  formData.append('file', dataUrl); // Cloudinary supports data URLs directly
+  formData.append('file', dataUrl);
   formData.append('upload_preset', uploadPreset);
+  
+  // Add custom name if provided (sanitize it for Cloudinary)
+  if (customName) {
+    const sanitizedName = customName
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, '_') // Replace non-alphanumeric chars with underscores
+      .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+      .replace(/^_+|_+$/g, ''); // Remove leading/trailing underscores
+    formData.append('public_id', `${sanitizedName}`);
+  }
 
   try {
     const response = await axios.post(url, formData, {

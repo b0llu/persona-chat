@@ -10,7 +10,7 @@ export interface Persona {
   name: string;
   description: string;
   avatar: string;
-  category: 'celebrity' | 'anime' | 'cartoon' | 'historical' | 'fictional' | 'custom';
+  category: string;
 }
 
 export interface ChatSession {

@@ -1,4 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
+import type { Persona } from '../types';
+import { generatePersonasPrompt, intelligentPersonaSearchPrompt } from './prompts';
 
 interface GenerateOptions {
   persona: {
@@ -17,6 +19,14 @@ interface AIGeneratedPersona {
   name: string;
   description: string;
   category: string;
+}
+
+interface PersonaWithAvatar {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  avatar: string;
 }
 
 // Initialize the AI client
@@ -151,55 +161,7 @@ export const generatePersonas = async (searchTerm: string): Promise<AIGeneratedP
   }
 
   try {
-    const prompt = `Generate up to 5 personas related to or exactly named "${searchTerm}". The personas could be real world people, fictional characters, or historical figures. For each persona, provide:
-- name: The full name of the persona
-- description: A brief, engaging description (1 sentences)
-- category: Add a category that best describes the persona, use the following categories: [
-    "Historical Figure",
-    "Contemporary Figure",
-    "Celebrity",
-    "Fictional Character",
-    "Mythological Figure",
-    "Literary Figure",
-    "Politician/World Leader",
-    "Scientist/Inventor",
-    "Artist/Creator",
-    "Business/Entrepreneur",
-    "Generic Persona/Occupation",
-    "AI/Virtual Persona",
-    "Pop Culture/Meme",
-    "Finance Expert",
-    "Investor/Trader",
-    "Anime Character",
-    "Manga Character",
-    "Video Game Character",
-    "Comic Book Character",
-    "Cartoon Character",
-    "Media Personality",
-    "Sports Personality",
-    "Influencer",
-    "Philosopher",
-    "Educator/Teacher",
-    "Medical Professional",
-    "Legal Professional",
-    "Tech Innovator",
-    "Fictional Creature",
-    "Superhero/Villain"
-  ]
-
-
-Format your response as a JSON array of objects with these exact properties. Make sure the personas are diverse and interesting. Focus on well-known characters or people that would be engaging to chat with.
-
-Example format:
-[
-  {
-    "name": "Example Name",
-    "description": "Brief description of the persona",
-    "category": "celebrity"
-  }
-]
-
-Only return the JSON array, no additional text.`;
+    const prompt = generatePersonasPrompt(searchTerm);
 
     const response = await ai!.models.generateContent({
       model: "gemini-2.5-flash-lite-preview-06-17",
@@ -248,12 +210,99 @@ Only return the JSON array, no additional text.`;
   }
 };
 
+export const intelligentPersonaSearch = async (
+  searchQuery: string,
+  existingPersonas: Persona[]
+): Promise<PersonaWithAvatar[]> => {
+  if (!isGeminiAvailable()) {
+    throw new Error('Gemini service is not available. Please check your API key configuration.');
+  }
+
+  try {
+    // Create a prompt that includes information about existing personas
+    const existingPersonasList = existingPersonas.map(p => `- ${p.name}: ${p.description} (${p.category})`).join('\n');
+    
+    const prompt = intelligentPersonaSearchPrompt(searchQuery, existingPersonasList);
+
+    const response = await ai!.models.generateContent({
+      model: "gemini-2.5-flash-lite-preview-06-17",
+      contents: prompt,
+    });
+
+    const text = response.text;
+    
+    if (!text || text.trim() === '') {
+      throw new Error('Empty response from Gemini API');
+    }
+
+    // Clean up the response to ensure it's valid JSON
+    let cleanedText = text.trim();
+    
+    // Remove any markdown code block formatting
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const aiResponse = JSON.parse(cleanedText);
+    const result: PersonaWithAvatar[] = [];
+
+    // Add existing personas that AI recommended
+    if (aiResponse.useExisting && Array.isArray(aiResponse.useExisting)) {
+      for (const personaName of aiResponse.useExisting) {
+        const existingPersona = existingPersonas.find(p => 
+          p.name.toLowerCase() === personaName.toLowerCase()
+        );
+        if (existingPersona && result.length < 3) {
+          result.push({
+            id: existingPersona.id,
+            name: existingPersona.name,
+            description: existingPersona.description,
+            category: existingPersona.category,
+            avatar: existingPersona.avatar
+          });
+        }
+      }
+    }
+
+    // Generate new personas if needed
+    if (aiResponse.generateNew && Array.isArray(aiResponse.generateNew)) {
+      for (const newPersona of aiResponse.generateNew) {
+        if (result.length >= 3) break;
+        
+        try {
+          if (newPersona.name && newPersona.description && newPersona.category) {
+            result.push({
+              id: `ai-${Date.now()}-${newPersona.name.toLowerCase().replace(/\s+/g, '-')}`,
+              name: newPersona.name,
+              description: newPersona.description,
+              category: newPersona.category,
+              avatar: ''
+            });
+          }
+        } catch (personaError) {
+          console.warn('Failed to process new persona', newPersona.name, personaError);
+        }
+      }
+    }
+
+    // Ensure we have exactly 3 personas
+    return result.slice(0, 3);
+
+  } catch (error) {
+    console.error('Error in intelligent persona search:', error);
+    throw new Error('Failed to search personas. Please try again.');
+  }
+};
+
 // For backward compatibility, create a service object
 export const geminiService = {
   isAvailable: isGeminiAvailable,
   generateResponse,
   generateStreamResponse,
-  generatePersonas
+  generatePersonas,
+  intelligentPersonaSearch
 };
 
 export default geminiService; 

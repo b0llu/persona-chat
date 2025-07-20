@@ -85,7 +85,7 @@ const PersonaSearchModal = ({
         // Step 2: Generate image
         const imageDataUrl = await imageService.generateImage({ prompt });
         // Step 3: Upload to Cloudinary
-        avatarUrl = await imageService.uploadToCloudinary(imageDataUrl);
+        avatarUrl = await imageService.uploadToCloudinary(imageDataUrl, aiPersona.name);
       } catch (imgErr) {
         console.error('Persona image generation/upload failed:', imgErr);
         // Fallback: leave avatarUrl as empty string

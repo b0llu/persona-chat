@@ -7,6 +7,7 @@ import { LogIn, Search, Send } from 'lucide-react';
 import { personaService } from '../../services/personaService';
 import { Persona, Message, ChatSession } from '../../types';
 import geminiService from '../../services/geminiService';
+import { imageService } from '../../services/imageService';
 import ChatMessage from '../chat/ChatMessage';
 import BouncingDots from '../chat/BouncingDots';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,13 +22,14 @@ const Landing = () => {
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
   const { signInWithGoogle } = useAuth();
   
-  // Chat-related state
+    // Chat-related state
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
   const [isChatActive, setIsChatActive] = useState(false);
+  const [isCreatingPersona, setIsCreatingPersona] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const MAX_MESSAGES = 2;
@@ -98,31 +100,40 @@ const Landing = () => {
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
+    // Clear previous results immediately when starting new search
+    setSearchResults([]);
     setIsSearching(true);
     
-    // Simulate search delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    let personasToUse = allPersonas;
-    
-    // If no personas loaded yet, try to load them
-    if (personasToUse.length === 0) {
-      const personas = await personaService.loadPersonas();
-      setAllPersonas(personas);
-      personasToUse = personas;
-    }
-    
-    // Only show personas if we have them from the service
-    if (personasToUse.length > 0) {
-      const shuffled = [...personasToUse].sort(() => 0.5 - Math.random());
-      const randomPersonas = shuffled.slice(0, Math.min(3, personasToUse.length));
-      setSearchResults(randomPersonas);
-    } else {
-      // No personas available - show empty state
+    try {
+      let personasToUse = allPersonas;
+      
+      // If no personas loaded yet, try to load them
+      if (personasToUse.length === 0) {
+        const personas = await personaService.loadPersonas();
+        setAllPersonas(personas);
+        personasToUse = personas;
+      }
+      
+      // Use the intelligent search function
+      const intelligentResults = await geminiService.intelligentPersonaSearch(searchQuery, personasToUse);
+      
+      // Convert PersonaWithAvatar to Persona format
+      const convertedResults = intelligentResults.map(result => ({
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        avatar: result.avatar,
+        category: result.category
+      }));
+      
+      setSearchResults(convertedResults);
+        } catch (error) {
+      console.error('Error in intelligent search:', error);
+      // Show empty results if AI search fails
       setSearchResults([]);
+    } finally {
+      setIsSearching(false);
     }
-    
-    setIsSearching(false);
   };
 
 
@@ -140,22 +151,99 @@ const Landing = () => {
     }
   }, [messages, showChat]);
 
-  const handlePersonaSelect = (persona: Persona) => {
-    setSelectedPersona(persona);
-    setShowChat(true);
-    setMessages([]);
-    setMessageCount(0);
-    setIsChatActive(false);
+    const handlePersonaSelect = async (persona: Persona) => {
+    // Check if this persona already exists in our database
+    const existingPersona = allPersonas.find(p => p.id === persona.id);
     
-    // Create welcome message
-    const welcomeMessage: Message = {
-      id: '1',
-      text: `Hello! I'm ${persona.name}. ${persona.description} How can I help you today?`,
-      sender: 'persona',
-      timestamp: new Date(),
-    };
-    
-    setMessages([welcomeMessage]);
+    if (existingPersona) {
+      // Persona already exists with avatar, start chat immediately
+      setSelectedPersona(existingPersona);
+      setShowChat(true);
+      setMessages([]);
+      setMessageCount(0);
+      setIsChatActive(false);
+      
+      const welcomeMessage: Message = {
+        id: '1',
+        text: `Hello! I'm ${existingPersona.name}. ${existingPersona.description} How can I help you today?`,
+        sender: 'persona',
+        timestamp: new Date(),
+      };
+      
+      setMessages([welcomeMessage]);
+    } else {
+      // This is a new persona, create it with avatar
+      setIsCreatingPersona(true);
+      
+      try {
+        // Generate image for the persona using the same prompt as PersonaSearchModal
+        let avatarUrl = '';
+        try {
+          const prompt = `A portrait of ${persona.name}, ${persona.description}, in a modern digital art style, must be a portrait, no text, no watermark, centered, high quality`;
+          
+          // Generate the image using Gemini
+          const imageDataUrl = await imageService.generateImage({ prompt });
+          
+          // Upload to Cloudinary with a custom name
+          avatarUrl = await imageService.uploadToCloudinary(imageDataUrl, persona.name);
+        } catch (imageError) {
+          console.error('Error generating/uploading persona image:', imageError);
+          // Continue without image if generation fails
+          avatarUrl = '';
+        }
+        
+        // Create a proper persona object with the generated image
+        const newPersona: Persona = {
+          ...persona,
+          avatar: avatarUrl
+        };
+        
+        // Save to Firebase (without user ID since user isn't logged in yet)
+        const saveSuccess = await personaService.savePersona(newPersona);
+        
+        if (saveSuccess) {
+          // Update the personas list to include the new one
+          setAllPersonas(prev => [...prev, newPersona]);
+        }
+        
+        // Start the chat with the complete persona (whether save succeeded or not)
+        setSelectedPersona(newPersona);
+        setShowChat(true);
+        setMessages([]);
+        setMessageCount(0);
+        setIsChatActive(false);
+        
+        // Create welcome message
+        const welcomeMessage: Message = {
+          id: '1',
+          text: `Hello! I'm ${newPersona.name}. ${newPersona.description} How can I help you today?`,
+          sender: 'persona',
+          timestamp: new Date(),
+        };
+        
+        setMessages([welcomeMessage]);
+        
+      } catch (error) {
+        console.error('Error processing new persona:', error);
+        // Fallback: start chat with original persona without avatar
+        setSelectedPersona(persona);
+        setShowChat(true);
+        setMessages([]);
+        setMessageCount(0);
+        setIsChatActive(false);
+        
+        const welcomeMessage: Message = {
+          id: '1',
+          text: `Hello! I'm ${persona.name}. ${persona.description} How can I help you today?`,
+          sender: 'persona',
+          timestamp: new Date(),
+        };
+        
+        setMessages([welcomeMessage]);
+      } finally {
+        setIsCreatingPersona(false);
+      }
+    }
   };
 
 
@@ -261,6 +349,15 @@ const Landing = () => {
       
       const user = await signInWithGoogle();
       
+      // Update ownership of the persona the user was chatting with (if any)
+      if (user && currentChatState.selectedPersona) {
+        try {
+          await personaService.updatePersonaOwnership(currentChatState.selectedPersona.id, user.uid);
+        } catch (error) {
+          console.error('Error updating persona ownership after login:', error);
+        }
+      }
+      
       // If login successful and there's an active chat with messages, create it in Firebase
       if (user && currentChatState.selectedPersona && currentChatState.messages.length > 0) {
         // Import chat service dynamically to avoid circular dependencies
@@ -308,6 +405,8 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+
+      
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
@@ -376,13 +475,13 @@ const Landing = () => {
                     <div className="flex items-center justify-center p-4 border-b border-border bg-card/80 backdrop-blur-md">
                       <div className="flex items-center gap-3">
                         {selectedPersona?.avatar ? (
-                          <img
-                            src={selectedPersona.avatar}
+                          <img 
+                            src={selectedPersona.avatar} 
                             alt={selectedPersona.name}
-                            className="w-10 h-10 rounded-full object-cover"
+                            className="w-10 h-10 rounded-xl object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-lg">
                             {selectedPersona?.name?.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -415,13 +514,13 @@ const Landing = () => {
                         {isLoading && (
                           <div className="flex items-center gap-3">
                             {selectedPersona?.avatar ? (
-                              <img
-                                src={selectedPersona.avatar}
+                              <img 
+                                src={selectedPersona.avatar} 
                                 alt={selectedPersona.name}
-                                className="w-6 h-6 lg:w-8 lg:h-8 rounded-full object-cover flex-shrink-0"
+                                className="w-6 h-6 lg:w-8 lg:h-8 rounded-xl object-cover flex-shrink-0"
                               />
                             ) : (
-                              <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs lg:text-sm flex-shrink-0">
+                              <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs lg:text-sm">
                                 {selectedPersona?.name?.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -445,13 +544,13 @@ const Landing = () => {
                         <div className="max-w-4xl mx-auto">
                           <div className="flex items-center justify-center gap-4">
                             {selectedPersona?.avatar ? (
-                              <img
-                                src={selectedPersona.avatar}
+                              <img 
+                                src={selectedPersona.avatar} 
                                 alt={selectedPersona.name}
-                                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                className="w-12 h-12 rounded-xl object-cover"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg flex-shrink-0">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-lg">
                                 {selectedPersona?.name?.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -589,87 +688,76 @@ const Landing = () => {
                       </Button>
                     </div>
 
-                    {/* Loading State */}
-                    {isSearching && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-center justify-center py-8"
-                      >
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                          <p className="text-xl text-muted-foreground">Finding perfect personas for you...</p>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Search Results - Only show after search is performed */}
-                    <AnimatePresence>
-                      {searchResults.length > 0 && !isSearching && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -30 }}
-                          className="w-full max-w-5xl"
-                        >
-                          <h3 className="text-2xl font-bold text-foreground mb-8 text-center">Suggested Personas</h3>
-                          <div className="grid md:grid-cols-3 gap-8 items-start">
-                            {searchResults.map((persona, index) => (
-                              <motion.div
-                                key={persona.id}
-                                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ delay: index * 0.15 }}
-                                onClick={() => handlePersonaSelect(persona)}
-                                className="cursor-pointer transition-all duration-300 hover:scale-105 group"
-                              >
-                                <div className="flex flex-col items-center text-center space-y-6 h-full">
-                                  {/* Circular Avatar */}
-                                  <div className="relative">
-                                    <div className="w-40 h-40 rounded-full border-2 border-primary/30 group-hover:border-primary group-hover:shadow-lg transition-all duration-300 overflow-hidden">
-                                      {persona.avatar && persona.avatar.startsWith('http') ? (
-                                        <img 
-                                          src={persona.avatar} 
-                                          alt={persona.name}
-                                          className="w-full h-full object-cover"
-                                          onError={(e) => {
-                                            // Fallback to emoji if image fails to load
-                                            const target = e.target as HTMLImageElement;
-                                            target.style.display = 'none';
-                                            const parent = target.parentElement;
-                                            if (parent) {
-                                              parent.innerHTML = '<div class="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center"><span class="text-5xl">👤</span></div>';
-                                            }
-                                          }}
-                                        />
-                                      ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                                          <span className="text-5xl">{persona.avatar || '👤'}</span>
-                                        </div>
-                                      )}
+                    {/* Shared Results Container - Shows both loading and results */}
+                    {(isSearching || searchResults.length > 0 || isCreatingPersona) && (
+                      <div className="w-full max-w-4xl">
+                        <AnimatePresence mode="wait">
+                          {isCreatingPersona ? (
+                            <motion.div
+                              key="creating"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="flex items-center justify-center py-16"
+                            >
+                              <div className="text-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                                <h3 className="text-xl font-semibold text-foreground mb-2">Creating Your Persona</h3>
+                                <p className="text-lg text-muted-foreground">Generating avatar and setting up the chat...</p>
+                              </div>
+                            </motion.div>
+                          ) : isSearching ? (
+                            <motion.div
+                              key="loading"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="flex items-center justify-center py-16"
+                            >
+                              <div className="text-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                                <p className="text-xl text-muted-foreground">Finding perfect personas for you...</p>
+                              </div>
+                            </motion.div>
+                          ) : searchResults.length > 0 ? (
+                            <motion.div
+                              key="results"
+                              initial={{ opacity: 0, y: 30 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="w-full"
+                            >
+                              <h3 className="text-2xl font-bold text-foreground mb-8 text-center">Choose Your Conversation Partner</h3>
+                              <div className="grid md:grid-cols-3 gap-4">
+                                {searchResults.map((persona, index) => (
+                                  <motion.div
+                                    key={persona.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ 
+                                      delay: index * 0.1, 
+                                      duration: 0.4
+                                    }}
+                                    onClick={() => !isCreatingPersona && handlePersonaSelect(persona)}
+                                    className={`group ${isCreatingPersona ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                  >
+                                    <div className="bg-card/40 backdrop-blur-sm border border-border/30 rounded-lg p-4 h-full transition-all duration-300 hover:bg-card/60 hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5">
+                                      
+                                      {/* Name */}
+                                      <h4 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
+                                        {persona.name}
+                                      </h4>
+                                      
+                                      {/* Description */}
+                                      <p className="text-muted-foreground text-sm leading-relaxed">
+                                        {persona.description}
+                                      </p>
                                     </div>
-                                    {/* Glow effect on hover */}
-                                    <div className="absolute inset-0 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md -z-10"></div>
-                                  </div>
-                                  
-                                  {/* Name */}
-                                  <h4 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors px-4">
-                                    {persona.name}
-                                  </h4>
-                                  
-                                  {/* Description */}
-                                  <div className="flex-1 px-4 max-w-sm">
-                                    <p className="text-muted-foreground text-sm leading-relaxed line-clamp-4">
-                                      {persona.description}
-                                    </p>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </motion.div>
+                          ) : null}
+                        </AnimatePresence>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
