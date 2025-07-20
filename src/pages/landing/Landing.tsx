@@ -701,8 +701,8 @@ const Landing = () => {
                             >
                               <div className="text-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                                <h3 className="text-xl font-semibold text-foreground mb-2">Creating Your Persona</h3>
-                                <p className="text-lg text-muted-foreground">Generating avatar and setting up the chat...</p>
+                                <h3 className="text-xl font-semibold text-foreground mb-2">Getting your chat ready</h3>
+                                <p className="text-lg text-muted-foreground">Just a moment...</p>
                               </div>
                             </motion.div>
                           ) : isSearching ? (
