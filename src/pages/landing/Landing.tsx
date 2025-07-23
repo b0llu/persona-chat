@@ -156,16 +156,31 @@ const Landing = () => {
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end'
+      });
+    }
   };
 
   useEffect(() => {
     if (showChat && messages.length > 0) {
+      // Use a longer delay to ensure DOM has updated
+      setTimeout(() => {
+        scrollToBottom();
+      }, 200);
+    }
+  }, [messages, showChat]);
+
+  // Also scroll when loading state changes
+  useEffect(() => {
+    if (showChat && !isLoading) {
       setTimeout(() => {
         scrollToBottom();
       }, 100);
     }
-  }, [messages, showChat]);
+  }, [isLoading, showChat]);
 
 
 
@@ -473,7 +488,7 @@ const Landing = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -30 }}
                     transition={{ duration: 0.6 }}
-                    className="fixed inset-0 flex flex-col bg-background"
+                    className="fixed inset-0 flex flex-col bg-background overflow-hidden"
                   >
                     {/* Chat Header */}
                     <div className="flex items-center justify-center p-4 border-b border-border bg-card/80 backdrop-blur-md">
@@ -533,7 +548,6 @@ const Landing = () => {
                             </div>
                           </div>
                         )}
-                        
                         <div ref={messagesEndRef} />
                       </div>
                     </div>
@@ -589,7 +603,7 @@ const Landing = () => {
 
                     {/* Floating Input Area - Only show when under message limit */}
                     {messageCount < MAX_MESSAGES && (
-                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/95 to-transparent">
+                      <div className="sticky bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/95 to-transparent border-t border-border/20">
                         <div className="max-w-4xl mx-auto">
                           <div className="bg-card border border-border rounded-xl shadow-lg p-3">
                             <div className="flex gap-3 items-end">

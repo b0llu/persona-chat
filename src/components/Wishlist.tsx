@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Check, Mail } from 'lucide-react';
 import { mixpanelService } from '../services/mixpanelService';
+import { wishlistService } from '../services/wishlistService';
 
 interface WishlistProps {
   persona?: {
@@ -46,15 +47,26 @@ const Wishlist = ({ persona, onWishlistComplete }: WishlistProps) => {
     setError('');
 
     try {
+      // Check if email already exists in Firebase
+      const emailExists = await wishlistService.checkEmailExists(email.trim());
+      if (emailExists) {
+        setError('This email is already on our wishlist!');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Add to Firebase wishlist collection
+      await wishlistService.addToWishlist({
+        email: email.trim(),
+        personaName: persona?.name
+      });
+
       // Track wishlist signup
       mixpanelService.trackWishlistSignup({
         email: email.trim(),
         persona_name: persona?.name,
         timestamp: new Date().toISOString()
       });
-
-      // Simulate API call (you can replace this with actual backend call)
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Store in localStorage
       localStorage.setItem('persona-chat-wishlisted', 'true');
@@ -64,7 +76,11 @@ const Wishlist = ({ persona, onWishlistComplete }: WishlistProps) => {
       onWishlistComplete?.();
     } catch (error) {
       console.error('Error submitting wishlist:', error);
-      setError('Something went wrong. Please try again.');
+      if (error instanceof Error && error.message === 'Email already exists in wishlist') {
+        setError('This email is already on our wishlist!');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
