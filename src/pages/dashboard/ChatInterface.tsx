@@ -10,6 +10,8 @@ import { Message, Persona, ChatSession, FirebaseChatMetadata } from '../../types
 import geminiService from '../../services/geminiService';
 import { mixpanelService } from '../../services/mixpanelService';
 import * as chatService from '../../services/chatService';
+import { imageService } from '../../services/imageService';
+import { personaService } from '../../services/personaService';
 
 const ChatInterface = () => {
   const { chatId } = useParams();
@@ -24,6 +26,7 @@ const ChatInterface = () => {
   const [isLoadingChats, setIsLoadingChats] = useState(true);
   const hasCreatedInitialChat = useRef(false);
   const [localChats, setLocalChats] = useState<Map<string, ChatSession>>(new Map());
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // Detect if this is a temporary chat route
   const isTemporaryChat = location.pathname.startsWith('/temp-chat');
@@ -107,6 +110,57 @@ const ChatInterface = () => {
     // Sort by updatedAt (newest first)
     return combined.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }, [chatSessions, localChats]);
+
+  // Generate image for a persona that doesn't have one
+  const generatePersonaImage = async (persona: Persona): Promise<Persona> => {
+    if (!user?.uid) return persona;
+    
+    setIsGeneratingImage(true);
+    try {
+      const prompt = `A portrait of ${persona.name}, ${persona.description}, in a modern digital art style, must be a portrait, no text, no watermark, centered, high quality`;
+      
+      // Generate the image using Gemini
+      const imageDataUrl = await imageService.generateImage({ prompt });
+      
+      // Upload to Cloudinary with a custom name
+      const avatarUrl = await imageService.uploadToCloudinary(imageDataUrl, persona.name);
+      
+      // Create updated persona with avatar
+      const updatedPersona: Persona = {
+        ...persona,
+        avatar: avatarUrl
+      };
+      
+      // Update the persona in Firebase with the new avatar
+      await personaService.savePersona(updatedPersona, user.uid);
+      
+      // Update the current chat metadata if it exists in Firebase
+      if (currentChat && currentChat.persona && currentChat.persona.id === persona.id) {
+        try {
+          const chatExists = await chatService.chatExistsInFirebase(currentChat.id, user.uid);
+          if (chatExists) {
+            // Update the chat with the new persona avatar
+            const updatedChat: ChatSession = {
+              ...currentChat,
+              persona: updatedPersona,
+              updatedAt: new Date()
+            };
+            await chatService.updateChat(updatedChat);
+          }
+        } catch (chatUpdateError) {
+          console.error('Error updating chat metadata with new avatar:', chatUpdateError);
+        }
+      }
+      
+      return updatedPersona;
+    } catch (error) {
+      console.error('Error generating persona image:', error);
+      // Return original persona if image generation fails
+      return persona;
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const createNewChat = useCallback(() => {
     if (!user?.uid) return;
@@ -197,6 +251,22 @@ const ChatInterface = () => {
   useEffect(() => {
     setIsMobileSidebarOpen(false);
   }, [currentChat]);
+
+  // Generate image for persona if it doesn't have one when chat is loaded
+  useEffect(() => {
+    console.log('selectedPersona', selectedPersona);
+    console.log('isGeneratingImage', isGeneratingImage);
+    console.log('user?.uid', user?.uid);
+    if (selectedPersona && !selectedPersona.avatar && !isGeneratingImage && user?.uid) {
+      generatePersonaImage(selectedPersona).then(updatedPersona => {
+        // Update the selected persona and current chat with the new avatar
+        setSelectedPersona(updatedPersona);
+        if (currentChat) {
+          setCurrentChat(prev => prev ? { ...prev, persona: updatedPersona } : null);
+        }
+      });
+    }
+  }, [selectedPersona?.id, selectedPersona?.avatar, isGeneratingImage, user?.uid]);
 
   const handlePersonaSelect = (persona: Persona) => {
     if (!currentChat || !user?.uid) return;
@@ -746,6 +816,7 @@ const ChatInterface = () => {
             onNewChat={createNewChat}
             isTemporaryChat={isTemporaryChat}
             onToggleTemporaryChat={handleToggleTemporaryChat}
+            isGeneratingImage={isGeneratingImage}
           />
         )}
       </div>

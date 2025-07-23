@@ -16,9 +16,10 @@ interface ChatAreaProps {
   onNewChat: () => void;
   isTemporaryChat?: boolean;
   onToggleTemporaryChat?: (toTemporary: boolean) => void;
+  isGeneratingImage?: boolean;
 }
 
-const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat, isTemporaryChat, onToggleTemporaryChat }: ChatAreaProps) => {
+const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat, isTemporaryChat, onToggleTemporaryChat, isGeneratingImage = false }: ChatAreaProps) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isChatActive, setIsChatActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,7 +36,7 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat, is
 
 
   const handleSend = () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isGeneratingImage) return;
     onSendMessage(inputMessage);
     setInputMessage('');
     setIsChatActive(true);
@@ -52,6 +53,12 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat, is
 
   return (
     <div className="flex flex-col h-full relative">
+      {/* Loading Overlay */}
+      {isGeneratingImage && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      )}
       {/* Header - Hidden on mobile since we have top nav */}
       <div className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border p-4">
         <div className="flex items-center justify-between">
@@ -176,14 +183,15 @@ const ChatArea = ({ chat, persona, user, isLoading, onSendMessage, onNewChat, is
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    placeholder={`Message ${persona.name}...`}
+                    placeholder={isGeneratingImage ? "Loading..." : `Message ${persona.name}...`}
                     className="w-full resize-none bg-transparent border-none px-3 lg:px-4 py-2 lg:py-3 text-sm lg:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[44px] max-h-[250px] leading-5"
                     rows={1}
+                    disabled={isGeneratingImage}
                   />
                 </div>
                 <Button
                   onClick={handleSend}
-                  disabled={!inputMessage.trim() || isLoading}
+                  disabled={!inputMessage.trim() || isLoading || isGeneratingImage}
                   variant="outline"
                   className="h-[44px] px-4 py-3 flex-shrink-0 w-[44px] lg:w-auto"
                   size="icon"

@@ -7,7 +7,7 @@ import { LogIn, Search, Send } from 'lucide-react';
 import { personaService } from '../../services/personaService';
 import { Persona, Message, ChatSession } from '../../types';
 import geminiService from '../../services/geminiService';
-import { imageService } from '../../services/imageService';
+
 import ChatMessage from '../chat/ChatMessage';
 import BouncingDots from '../chat/BouncingDots';
 import { useAuth } from '@/hooks/useAuth';
@@ -151,12 +151,14 @@ const Landing = () => {
     }
   }, [messages, showChat]);
 
+
+
     const handlePersonaSelect = async (persona: Persona) => {
     // Check if this persona already exists in our database
     const existingPersona = allPersonas.find(p => p.id === persona.id);
     
     if (existingPersona) {
-      // Persona already exists with avatar, start chat immediately
+      // Persona already exists, start chat immediately
       setSelectedPersona(existingPersona);
       setShowChat(true);
       setMessages([]);
@@ -172,30 +174,14 @@ const Landing = () => {
       
       setMessages([welcomeMessage]);
     } else {
-      // This is a new persona, create it with avatar
+      // This is a new persona, save it WITHOUT avatar for now
       setIsCreatingPersona(true);
       
       try {
-        // Generate image for the persona using the same prompt as PersonaSearchModal
-        let avatarUrl = '';
-        try {
-          const prompt = `A portrait of ${persona.name}, ${persona.description}, in a modern digital art style, must be a portrait, no text, no watermark, centered, high quality`;
-          
-          // Generate the image using Gemini
-          const imageDataUrl = await imageService.generateImage({ prompt });
-          
-          // Upload to Cloudinary with a custom name
-          avatarUrl = await imageService.uploadToCloudinary(imageDataUrl, persona.name);
-        } catch (imageError) {
-          console.error('Error generating/uploading persona image:', imageError);
-          // Continue without image if generation fails
-          avatarUrl = '';
-        }
-        
-        // Create a proper persona object with the generated image
+        // Create persona object without avatar (will be generated after login)
         const newPersona: Persona = {
           ...persona,
-          avatar: avatarUrl
+          avatar: '' // No avatar yet
         };
         
         // Save to Firebase (without user ID since user isn't logged in yet)
@@ -206,7 +192,7 @@ const Landing = () => {
           setAllPersonas(prev => [...prev, newPersona]);
         }
         
-        // Start the chat with the complete persona (whether save succeeded or not)
+        // Start the chat with the persona (without avatar)
         setSelectedPersona(newPersona);
         setShowChat(true);
         setMessages([]);
@@ -349,9 +335,10 @@ const Landing = () => {
       
       const user = await signInWithGoogle();
       
-      // Update ownership of the persona the user was chatting with (if any)
+      // Update persona ownership after login
       if (user && currentChatState.selectedPersona) {
         try {
+          // Update ownership immediately
           await personaService.updatePersonaOwnership(currentChatState.selectedPersona.id, user.uid);
         } catch (error) {
           console.error('Error updating persona ownership after login:', error);
@@ -481,7 +468,7 @@ const Landing = () => {
                             className="w-10 h-10 rounded-xl object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-lg">
+                          <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-lg">
                             {selectedPersona?.name?.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -520,7 +507,7 @@ const Landing = () => {
                                 className="w-6 h-6 lg:w-8 lg:h-8 rounded-xl object-cover flex-shrink-0"
                               />
                             ) : (
-                              <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs lg:text-sm">
+                              <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-xs lg:text-sm">
                                 {selectedPersona?.name?.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -550,7 +537,7 @@ const Landing = () => {
                                 className="w-12 h-12 rounded-xl object-cover"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-lg">
+                              <div className="w-12 h-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-lg">
                                 {selectedPersona?.name?.charAt(0).toUpperCase()}
                               </div>
                             )}
