@@ -104,6 +104,47 @@ export const mixpanelService = {
             console.error('Error tracking temporary chat used:', error);
         }
     },
+
+    // Track when someone visits the landing page
+    trackLandingPageVisit: () => {
+        if (!isMixpanelReady()) return;
+        
+        try {
+            mixpanel.track('Landing Page Visit', {
+                timestamp: new Date().toISOString(),
+                page: 'landing',
+                url: window.location.href
+            });
+        } catch (error) {
+            console.error('Error tracking landing page visit:', error);
+        }
+    },
+
+    // Track when someone signs up for the wishlist
+    trackWishlistSignup: (data: {
+        email: string;
+        persona_name?: string;
+        timestamp: string;
+    }) => {
+        if (!isMixpanelReady()) return;
+        
+        try {
+            mixpanel.track('Wishlist Signup', {
+                email: data.email,
+                persona_name: data.persona_name,
+                timestamp: data.timestamp
+            });
+            
+            // Also set people properties for the email
+            mixpanel.people.set({
+                $email: data.email,
+                wishlist_signup_date: data.timestamp,
+                last_persona_interest: data.persona_name
+            });
+        } catch (error) {
+            console.error('Error tracking wishlist signup:', error);
+        }
+    },
 };
 
 export default mixpanelService;

@@ -3,14 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
-import { LogIn, Search, Send } from 'lucide-react';
+import { LogIn, Search, Send, Check } from 'lucide-react';
 import { personaService } from '../../services/personaService';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Persona, Message, ChatSession } from '../../types';
 import geminiService from '../../services/geminiService';
 
 import ChatMessage from '../chat/ChatMessage';
 import BouncingDots from '../chat/BouncingDots';
+
 import { useAuth } from '@/hooks/useAuth';
+import Wishlist from '../../components/Wishlist';
+import { mixpanelService } from '../../services/mixpanelService';
 
 const Landing = () => {
   const [showSearch, setShowSearch] = useState(false);
@@ -20,6 +24,7 @@ const Landing = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { signInWithGoogle } = useAuth();
   
     // Chat-related state
@@ -30,6 +35,7 @@ const Landing = () => {
   const [messageCount, setMessageCount] = useState(0);
   const [isChatActive, setIsChatActive] = useState(false);
   const [isCreatingPersona, setIsCreatingPersona] = useState(false);
+  const [hasWishlisted, setHasWishlisted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const MAX_MESSAGES = 2;
@@ -64,13 +70,22 @@ const Landing = () => {
   // Create multiple copies for seamless infinite scroll
   const infiniteItems = [...carouselItems, ...carouselItems, ...carouselItems];
 
-  // Load personas on component mount
+  // Load personas on component mount and track landing page visit
   useEffect(() => {
     const loadPersonas = async () => {
       const personas = await personaService.loadPersonas();
       setAllPersonas(personas);
     };
     loadPersonas();
+    
+    // Check if user has already wishlisted
+    const hasWishlistedStored = localStorage.getItem('persona-chat-wishlisted');
+    if (hasWishlistedStored === 'true') {
+      setHasWishlisted(true);
+    }
+    
+    // Track landing page visit
+    mixpanelService.trackLandingPageVisit();
   }, []);
 
   // Auto-scroll with seamless infinite loop
@@ -320,75 +335,76 @@ const Landing = () => {
       } else {
         handleSearch();
       }
-    }
+        }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      // Store current chat state before login
-      const currentChatState = {
-        selectedPersona,
-        messages,
-        messageCount,
-        isChatActive
-      };
-      
-      const user = await signInWithGoogle();
-      
-      // Update persona ownership after login
-      if (user && currentChatState.selectedPersona) {
-        try {
-          // Update ownership immediately
-          await personaService.updatePersonaOwnership(currentChatState.selectedPersona.id, user.uid);
-        } catch (error) {
-          console.error('Error updating persona ownership after login:', error);
-        }
-      }
-      
-      // If login successful and there's an active chat with messages, create it in Firebase
-      if (user && currentChatState.selectedPersona && currentChatState.messages.length > 0) {
-        // Import chat service dynamically to avoid circular dependencies
-        const { createChat, generateChatId } = await import('../../services/chatService');
-        const { mixpanelService } = await import('../../services/mixpanelService');
-        
-        // Create a new chat session
-        const newChat: ChatSession = {
-          id: generateChatId(),
-          title: `Chat with ${currentChatState.selectedPersona.name}`,
-          persona: currentChatState.selectedPersona,
-          userId: user.uid,
-          messages: currentChatState.messages,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        
-        try {
-          // Save to Firebase
-          await createChat(newChat);
-          
-          // Track chat creation
-          mixpanelService.trackChatCreated({
-            chat_id: newChat.id,
-            persona_name: newChat.persona?.name,
-            persona_category: newChat.persona?.category,
-            user_id: newChat.userId,
-          });
-          
-          // Redirect to dashboard with the created chat
-          window.location.href = `/chat/${newChat.id}`;
-          return;
-        } catch (error) {
-          console.error('Error creating chat after login:', error);
-          // Fallback: just redirect to dashboard
-        }
-      }
-      
-      // Default redirect to dashboard if no active chat
-      window.location.href = '/dashboard';
-    } catch (error) {
-      console.error('Error signing in:', error);
-    }
-  };
+  // COMMENTED OUT: Google Sign-in functionality (replaced with wishlist for now)
+  // const handleGoogleSignIn = async () => {
+  //   try {
+  //     // Store current chat state before login
+  //     const currentChatState = {
+  //       selectedPersona,
+  //       messages,
+  //       messageCount,
+  //       isChatActive
+  //     };
+  //     
+  //     const user = await signInWithGoogle();
+  //     
+  //     // Update persona ownership after login
+  //     if (user && currentChatState.selectedPersona) {
+  //       try {
+  //         // Update ownership immediately
+  //         await personaService.updatePersonaOwnership(currentChatState.selectedPersona.id, user.uid);
+  //       } catch (error) {
+  //         console.error('Error updating persona ownership after login:', error);
+  //       }
+  //     }
+  //     
+  //     // If login successful and there's an active chat with messages, create it in Firebase
+  //     if (user && currentChatState.selectedPersona && currentChatState.messages.length > 0) {
+  //       // Import chat service dynamically to avoid circular dependencies
+  //       const { createChat, generateChatId } = await import('../../services/chatService');
+  //       const { mixpanelService } = await import('../../services/mixpanelService');
+  //       
+  //       // Create a new chat session
+  //       const newChat: ChatSession = {
+  //         id: generateChatId(),
+  //         title: `Chat with ${currentChatState.selectedPersona.name}`,
+  //         persona: currentChatState.selectedPersona,
+  //         userId: user.uid,
+  //         messages: currentChatState.messages,
+  //         createdAt: new Date(),
+  //         updatedAt: new Date(),
+  //       };
+  //       
+  //       try {
+  //         // Save to Firebase
+  //         await createChat(newChat);
+  //         
+  //         // Track chat creation
+  //         mixpanelService.trackChatCreated({
+  //           chat_id: newChat.id,
+  //           persona_name: newChat.persona?.name,
+  //           persona_category: newChat.persona?.category,
+  //           user_id: newChat.userId,
+  //         });
+  //         
+  //         // Redirect to dashboard with the created chat
+  //         window.location.href = `/chat/${newChat.id}`;
+  //         return;
+  //       } catch (error) {
+  //         console.error('Error creating chat after login:', error);
+  //         // Fallback: just redirect to dashboard
+  //       }
+  //     }
+  //     
+  //     // Default redirect to dashboard if no active chat
+  //     window.location.href = '/dashboard';
+  //   } catch (error) {
+  //     console.error('Error signing in:', error);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -521,8 +537,9 @@ const Landing = () => {
                       </div>
                     </div>
 
-                    {/* Login Prompt - Shows after message limit */}
-                    {messageCount >= MAX_MESSAGES && (
+                    {/* Wishlist Prompt - Shows after message limit */}
+                    {/* COMMENTED OUT: Original Google Login Prompt */}
+                    {/* {messageCount >= MAX_MESSAGES && (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -556,6 +573,17 @@ const Landing = () => {
                           </div>
                         </div>
                       </motion.div>
+                    )} */}
+                    
+                    {/* Current: Wishlist Component */}
+                    {messageCount >= MAX_MESSAGES && (
+                      <Wishlist 
+                        persona={selectedPersona ? {
+                          name: selectedPersona.name,
+                          avatar: selectedPersona.avatar
+                        } : undefined}
+                        onWishlistComplete={() => setHasWishlisted(true)}
+                      />
                     )}
 
                     {/* Floating Input Area - Only show when under message limit */}
@@ -624,16 +652,36 @@ const Landing = () => {
                       </div>
                     </div>
 
-                    {/* Start Button */}
-                    <Button
-                      onClick={handleStartChatting}
-                      variant="outline"
-                      className="text-lg font-semibold px-8 py-3 h-auto bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-primary shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-lg"
-                      size="default"
-                    >
-                      <LogIn className="w-5 h-5 mr-2" />
-                      Start Chatting
-                    </Button>
+                    {/* Start Button or Wishlist Message */}
+                    {hasWishlisted ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center space-y-4"
+                      >
+                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white flex items-center justify-center">
+                          <Check className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold text-foreground mb-2">
+                            Thanks for joining! 🎉
+                          </h3>
+                          <p className="text-lg text-muted-foreground">
+                            PersonaChat will be available soon. We'll notify you when it launches!
+                          </p>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <Button
+                        onClick={handleStartChatting}
+                        variant="outline"
+                        className="text-lg font-semibold px-8 py-3 h-auto bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-primary shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-lg"
+                        size="default"
+                      >
+                        <LogIn className="w-5 h-5 mr-2" />
+                        Start Chatting
+                      </Button>
+                    )}
                   </motion.div>
                 ) : (
                   /* Search Interface */
