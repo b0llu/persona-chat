@@ -5,14 +5,15 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { LogIn, Search, Send, Check } from 'lucide-react';
 import { personaService } from '../../services/personaService';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Persona, Message, ChatSession } from '../../types';
+import { Persona, Message, 
+  // ChatSession 
+} from '../../types';
 import geminiService from '../../services/geminiService';
 
 import ChatMessage from '../chat/ChatMessage';
 import BouncingDots from '../chat/BouncingDots';
 
-import { useAuth } from '@/hooks/useAuth';
+// import { useAuth } from '@/hooks/useAuth';
 import Wishlist from '../../components/Wishlist';
 import { mixpanelService } from '../../services/mixpanelService';
 
@@ -24,8 +25,8 @@ const Landing = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { signInWithGoogle } = useAuth();
+
+  // const { signInWithGoogle } = useAuth();
   
     // Chat-related state
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
