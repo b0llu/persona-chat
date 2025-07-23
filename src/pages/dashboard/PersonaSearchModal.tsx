@@ -9,6 +9,7 @@ import { mixpanelService } from '../../services/mixpanelService';
 import { useAuth } from '../../hooks/useAuth';
 import { Search, Sparkles, Plus, Loader2 } from 'lucide-react';
 import { imageService } from '../../services/imageService';
+import { generatePersonaImagePrompt } from '../../services/prompts';
 
 interface PersonaSearchModalProps {
   isOpen: boolean;
@@ -79,7 +80,7 @@ const PersonaSearchModal = ({
     setCreationError(null);
     try {
       // Step 1: Generate image prompt
-      const prompt = `A portrait of ${aiPersona.name}, ${aiPersona.description}, in a modern digital art style, must be a portrait, no text, no watermark, centered, high quality`;
+      const prompt = generatePersonaImagePrompt(aiPersona.name, aiPersona.description);
       let avatarUrl = '';
       try {
         // Step 2: Generate image

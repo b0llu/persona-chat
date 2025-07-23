@@ -2,14 +2,12 @@
 
 export const CONTENT_GUIDELINES = `
 CRITICAL CONTENT GUIDELINES - STRICTLY ENFORCE:
-1. NEVER suggest generic roles/occupations as personas (e.g., "Doctor", "Teacher", "Artist", "Engineer")
-2. ONLY suggest specific, named individuals - real people, fictional characters, or historical figures
-3. ABSOLUTELY NO adult content creators, pornographic actors, or sexually explicit personas
-4. NO historically harmful figures (dictators, war criminals, terrorists, cult leaders)
-5. NO controversial figures known primarily for criminal activity or hate speech
-6. NO objectifying or sexualized personas regardless of search term
-7. Focus on positive, educational, entertaining, or inspiring figures
-8. If the search term relates to inappropriate content, pivot to wholesome alternatives in the same general category
+1. NEVER suggest generic roles/occupations as personas (e.g., "Doctor", "Teacher", "Artist", "Engineer").
+2. ONLY suggest specific, named individuals - real people, fictional characters, historical figures, etc.
+3. ABSOLUTELY NO adult content creators, pornographic actors, or sexually explicit personas.
+4. ALLOW world-renowned, prominent figures even if they are controversial, but STRICTLY EXCLUDE those known primarily for severe criminal activity or hate speech.
+5. NO objectifying or sexualized personas regardless of search term.
+6. If the search term relates to inappropriate content, pivot to wholesome alternatives in the same general category.
 
 APPROPRIATE PERSONA TYPES:
 - Well-known fictional characters from books, movies, TV shows, games, anime/manga
@@ -118,4 +116,8 @@ CRITICAL: The total count of useExisting + generateNew MUST equal exactly 3. If 
 Categories: ${PERSONA_CATEGORIES}
 
 Only return the JSON object, no additional text.`;
-}; 
+};
+
+export const generatePersonaImagePrompt = (personaName: string, personaDescription: string): string => {
+  return `Simple, photorealistic portrait of ${personaName}, accurately depicting ${personaDescription}. Prioritize clear recognition. Plain background, subtle lighting. Optimized for web, strictly 1:1 aspect ratio (square image). No text, no watermark, no logos.`;
+};
