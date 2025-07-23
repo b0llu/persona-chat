@@ -39,7 +39,7 @@ const Landing = () => {
   const [hasWishlisted, setHasWishlisted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const MAX_MESSAGES = 2;
+  const MAX_MESSAGES = 5;
 
   const carouselItems = [
     {
