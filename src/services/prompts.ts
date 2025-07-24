@@ -1,14 +1,6 @@
 // AI Prompts for Persona Generation and Search
 
 export const CONTENT_GUIDELINES = `
-CRITICAL CONTENT GUIDELINES - STRICTLY ENFORCE:
-1. NEVER suggest generic roles/occupations as personas (e.g., "Doctor", "Teacher", "Artist", "Engineer").
-2. ONLY suggest specific, named individuals - real people, fictional characters, historical figures, etc.
-3. ABSOLUTELY NO adult content creators, pornographic actors, or sexually explicit personas.
-4. ALLOW world-renowned, prominent figures even if they are controversial, but STRICTLY EXCLUDE those known primarily for severe criminal activity or hate speech.
-5. NO objectifying or sexualized personas regardless of search term.
-6. If the search term relates to inappropriate content, pivot to wholesome alternatives in the same general category.
-
 APPROPRIATE PERSONA TYPES:
 - Well-known fictional characters from books, movies, TV shows, games, anime/manga
 - Historical figures known for positive contributions (scientists, inventors, explorers, artists)
