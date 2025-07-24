@@ -1,13 +1,3 @@
-// AI Prompts for Persona Generation and Search
-
-export const CONTENT_GUIDELINES = `
-APPROPRIATE PERSONA TYPES:
-- Well-known fictional characters from books, movies, TV shows, games, anime/manga
-- Historical figures known for positive contributions (scientists, inventors, explorers, artists)
-- Contemporary figures with positive public personas (actors, musicians, athletes, educators)
-- Mythological or legendary figures from various cultures
-- Beloved animated or comic book characters`;
-
 export const PERSONA_CATEGORIES = `[
     "Historical Figure",
     "Contemporary Figure", 
@@ -43,8 +33,6 @@ export const PERSONA_CATEGORIES = `[
 export const generatePersonasPrompt = (searchTerm: string): string => {
   return `You are generating personas for a family-friendly chat application. Generate up to 5 appropriate personas related to or exactly named "${searchTerm}".
 
-${CONTENT_GUIDELINES}
-
 For each persona, provide:
 - name: The full name of the specific person/character (NEVER just a role/occupation)
 - description: A brief, family-friendly description (1-2 sentences) focusing on positive traits
@@ -75,8 +63,6 @@ export const intelligentPersonaSearchPrompt = (searchQuery: string, existingPers
 Here are the existing personas we already have:
 ${existingPersonasList}
 
-${CONTENT_GUIDELINES}
-
 Task: 
 Analyze the search query "${searchQuery}" and decide:
 1. Which existing personas (if any) are closely related and appropriate to include
@@ -85,7 +71,6 @@ Analyze the search query "${searchQuery}" and decide:
 For any new personas you generate, they should be:
 - Specific named individuals (NEVER generic roles)
 - Related to "${searchQuery}" but appropriate for all ages
-- Real world people, fictional characters, or historical figures with positive contributions
 - Diverse and interesting to chat with
 - Have engaging, wholesome personalities
 
